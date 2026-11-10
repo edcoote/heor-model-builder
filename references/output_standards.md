@@ -51,3 +51,16 @@ Standard tables:
 | `tab_scenarios` | One row per scenario: change made, incremental cost, incremental QALYs, ICER |
 | `tab_budget_impact` | By year: population, uptake, cost with and without, incremental, cumulative |
 | `tab_dcea` | NHB by equity group and inequality measures |
+
+## HTML report
+
+`build_report()` writes `outputs/report.html`: one self-contained file, with figures embedded, that opens in any browser without an internet connection. Use it to share results; the Word tables and TIFF/PDF figures remain the manuscript files.
+
+| Item | Standard |
+|---|---|
+| Content | Only saved outputs: the same PNG figures and CSV tables as the manuscript, so the report and the paper cannot disagree. Headline numbers come from the saved `.rds` results. |
+| Order | Summary cards, model (structure, inputs), base case, sensitivity analysis, probabilistic analysis, checks, then the spec and the decision log (added automatically). |
+| Headline cards | 4–6 short values: ICER (or "Dominant"), incremental QALYs and cost, INMB and probability cost-effective at each threshold. |
+| Legends | From `manuscript/figure_legends.md`, matched by a `<!-- fig_<stem> -->` line above each legend. |
+| Table titles | From `save_table()`, which writes `<name>.meta.json` beside each CSV. |
+| Interactivity | Sortable tables, a filter box on long tables, and side navigation. No model inputs can be changed in the report: the model runs in R only. |

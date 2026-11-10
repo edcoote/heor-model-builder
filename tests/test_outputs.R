@@ -48,6 +48,39 @@ compile_tables(order = c("tab_inputs", "tab_base_case"))
 check("tab_base_case.docx written", file.exists(here::here("outputs", "tables", "tab_base_case.docx")))
 check("tab_base_case.csv written", file.exists(here::here("outputs", "tables", "tab_base_case.csv")))
 check("manuscript/tables.docx compiled", file.exists(here::here("manuscript", "tables.docx")))
+check("table title and footnote saved for the report",
+      jsonlite::read_json(here::here("outputs", "tables", "tab_base_case.meta.json"))$title == "Table 2. Base case results")
+
+cat("HTML report\n")
+dir.create(here::here("log"), showWarnings = FALSE)
+writeLines(c("# Run log", "", "## 2026-01-01 — Stage 1", "", "- Assumption: **constant** mortality.",
+             "  - nested point", "", "| A | B |", "|---|---|", "| 1 | 2 |"),
+           here::here("log", "run_log.md"))
+writeLines(c("# Model specification", "", "| Field | Entry |", "|---|---|",
+             "| **[R]** Purpose | [x] Journal manuscript [ ] Conference |"),
+           here::here("model_spec.md"))
+writeLines(c("# Figure legends", "", "<!-- fig_ce_plane -->",
+             "**Figure 1. Cost-effectiveness plane.** Legend text."),
+           here::here("manuscript", "figure_legends.md"))
+tests_df <- data.frame(test = "Cohort conserved", pass = TRUE)
+out <- build_report(
+  title = "Test model", subtitle = "Subtitle <with> & characters",
+  headline = c("ICER" = "£15,000 per QALY", "P(cost-effective) at £25,000" = "80%"),
+  sections = list("Results" = list(report_text("Some **bold** text."), "tab_base_case", "fig_ce_plane"),
+                  "Checks" = list(tests_df)))
+html <- paste(readLines(out, encoding = "UTF-8", warn = FALSE), collapse = "\n")
+check("report.html written", file.exists(here::here("outputs", "report.html")))
+check("figure embedded as data URI", grepl("src=\"data:image/png;base64,", html, fixed = TRUE))
+check("figure legend matched by marker", grepl("Figure 1. Cost-effectiveness plane.", html, fixed = TRUE))
+check("table caption and footnote shown", grepl("Table 2. Base case results", html, fixed = TRUE) &&
+        grepl("QALY, quality-adjusted life year", html, fixed = TRUE))
+check("pound signs survive", grepl("£15,000 per QALY", html, fixed = TRUE) && grepl("£13,000", html, fixed = TRUE))
+check("text is escaped", grepl("Subtitle &lt;with&gt; &amp; characters", html, fixed = TRUE))
+check("headline cards shown", grepl("class=\"card\"", html, fixed = TRUE))
+check("spec ticks rendered", grepl("☑ Journal manuscript", html, fixed = TRUE))
+check("log rendered with nested list and table", grepl("<strong>constant</strong>", html, fixed = TRUE) &&
+        grepl("<ul><li>", html, fixed = TRUE) && grepl("<td>2</td>", html, fixed = TRUE))
+check("missing figure is an error", inherits(try(build_report(list(X = list("fig_none"))), silent = TRUE), "try-error"))
 
 setwd(repo)
 unlink(tmp, recursive = TRUE)

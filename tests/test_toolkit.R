@@ -138,4 +138,15 @@ n_pass <- n_pass + 3
 check("test_life_expectancy fails a model with constant 2% mortality",
       !test_life_expectancy(ly_from_p(rep(0.02, 40)), lt, 50, 0.5, 40)$pass)
 
+cat("Spec form\n")
+# The form builds its fields from an embedded copy of the template. If this
+# fails, run: Rscript scripts/build_spec_form.R
+read_utf8 <- function(p) paste(readLines(p, encoding = "UTF-8", warn = FALSE), collapse = "\n")
+form <- read_utf8(file.path(root, "assets", "model_spec_form.html"))
+embedded <- sub("(?s).*<script type=\"text/plain\" id=\"spec-template\">(.*?)</script><!--/spec-template-->.*",
+                "\\1", form, perl = TRUE)
+tpl <- read_utf8(file.path(root, "assets", "model_spec_template.md"))
+check("form embeds the current model_spec_template.md",
+      identical(trimws(gsub("\r", "", embedded)), trimws(gsub("\r", "", tpl))))
+
 cat("\nAll", n_pass, "checks passed.\n")

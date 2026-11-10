@@ -20,7 +20,7 @@ Automatic tests find code errors; they cannot tell whether the model is right. S
 ### Stage 0 — Spec
 
 1. Look for `model_spec.md` in the project folder or among the user's files.
-2. If there is none, copy `assets/model_spec_template.md` into the project as `model_spec.md` and ask the user to fill it in. If they would rather answer in chat, ask for the **required** fields only, all in one message.
+2. If there is none, copy `assets/model_spec_template.md` into the project as `model_spec.md`, and copy `assets/model_spec_form.html` into the project root. Ask the user to fill in the spec. The easiest way is to open `model_spec_form.html` in a browser, fill it in, and export `model_spec.md` (and `parameters.csv` if they used the parameter table) into the project folder. The form works offline and can also open an existing `model_spec.md` to edit it. Editing `model_spec.md` directly also works. If they would rather answer in chat, ask for the **required** fields only, all in one message. If the form exported a `parameters.csv`, move it to `inputs/parameters.csv` and use it as the starting point for Stage 1.
 3. Validate the spec against `references/methods_checklist.md` (section "Spec validation"). Then send **one** message that lists:
    - missing required fields,
    - internal inconsistencies (e.g. lifetime horizon with a 1-year cycle and no age-dependent mortality; probabilities given where rates are needed),
@@ -55,9 +55,15 @@ Automatic tests find code errors; they cannot tell whether the model is right. S
 
 1. `R/06_outputs.R` regenerates every figure and table from saved results, so outputs can be rebuilt without rerunning the model.
 2. Compile all tables into `manuscript/tables.docx` with `compile_tables()`.
-3. Write `manuscript/figure_legends.md` (one legend per figure, abbreviations spelt out).
+3. Write `manuscript/figure_legends.md` (one legend per figure, abbreviations spelt out). Put `<!-- fig_<stem> -->` on the line above each legend, so the HTML report can match legends to figures. Start the file at Stage 1 and add each legend when its figure is first made.
 4. Write `manuscript/methods_draft.md` covering every CHEERS 2022 methods item the model touches, and `manuscript/cheers_2022.md` mapping each item to a section or "not applicable".
-5. Make sure `run_all.R` reproduces everything from a clean session.
+5. Build the HTML report at the end of `R/06_outputs.R` with `build_report()` from `R/utils_outputs.R`. It writes `outputs/report.html`, one self-contained file to share with co-authors or clients. Pass:
+   - `headline`: the key results as short strings: the ICER (or "Dominant"), incremental QALYs and costs, INMB and the probability of being cost-effective at each threshold;
+   - `sections`: the figures and tables in reading order: model, inputs, base case, DSA, scenarios, PSA, then a data frame of the automatic test results;
+   - a `subtitle` that names the comparison, perspective and horizon.
+
+   The report adds the spec and the decision log itself. Compute headline numbers from the saved `.rds` files, not by rerunning the model. You can also build an interim report at Checkpoints 2 and 3 if the user wants something to share.
+6. Make sure `run_all.R` reproduces everything from a clean session.
 
 ## Rules that apply throughout
 
@@ -75,6 +81,7 @@ Automatic tests find code errors; they cannot tell whether the model is right. S
 - `references/output_standards.md` — figure and table house style. Read before producing any output.
 - `references/folder_structure.md` — the scaffold and what goes where.
 - `assets/model_spec_template.md` — the fill-out spec.
+- `assets/model_spec_form.html` — a browser form for the spec, built from an embedded copy of the template. It exports `model_spec.md` and `parameters.csv`. After changing the template, run `Rscript scripts/build_spec_form.R` to re-embed it; `tests/test_toolkit.R` fails if they differ. Open the form with `?selftest` added to its address to run its round-trip self-test.
 - `references/review_checklist.md` — the human checks for each checkpoint: face validity, rationality checks and known-answer tests. Copied into each project's `log/` folder.
 - `assets/utils_conversions.R`, `assets/utils_outputs.R`, `assets/utils_tests.R` — copied into each project's `R/` folder by the scaffold script.
 - `assets/ons_life_tables_uk.csv` and `assets/ons_life_tables_uk_source.md` — ONS UK life tables by single year of age and sex, with their release details. Copied into each project's `inputs/raw/` folder by the scaffold script. `scripts/prepare_ons.R` rebuilds them from a new ONS workbook.

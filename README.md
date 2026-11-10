@@ -26,8 +26,8 @@ The skill has three aims:
    /anthropic-skills:heor-model-builder new model
    ```
 
-   Claude puts a blank `model_spec.md` in the folder. If you already have a filled-in spec, save it in the folder and go to step 5.
-4. **Fill in the spec.** Fill in every field marked **[R]**. Tick options by changing `[ ]` to `[x]`. For UK models, give the age at entry and the % female, because the ONS life tables need them. Leave background mortality blank to use the bundled ONS tables.
+   Claude puts a blank `model_spec.md` and the spec form `model_spec_form.html` in the folder. If you already have a filled-in spec, save it in the folder and go to step 5.
+4. **Fill in the spec.** Double-click `model_spec_form.html` to open it in your browser. Fill in every field marked **Required**, add your parameters (you can paste them from Excel), then click **Export model_spec.md**, and **Export parameters.csv** if you entered parameters. Save both into the model folder. The form works offline, saves a draft as you go, and can open an existing `model_spec.md` to edit it. For UK models, give the age at entry and the % female, because the ONS life tables need them. Leave background mortality blank to use the bundled ONS tables. You can also edit `model_spec.md` directly instead.
 5. **Tell Claude the spec is ready.** Type `spec is done`. Put any data files (for example a parameters spreadsheet) in the folder first, and name them in your message.
 6. **Answer the Stage 0 message once.** Claude lists all the gaps and proposed defaults in one message. Reply to all of them in one message, for example "accept all defaults, but use a threshold of £30,000".
 7. **Review and sign off each checkpoint.** Use the matching section of `log/review_checklist.md`. Then reply `signed off, continue`.
@@ -37,7 +37,13 @@ The skill has three aims:
 | 1. Structure | Model diagram, inputs table | Input values against their sources, units, face validity |
 | 2. Base case | Results table, Markov trace, test summary, hand-check table | Rebuild cycles 1–2 in Excel; results make sense |
 | 3. Uncertainty | CE plane, CEAC, tornado, scenarios | Distributions, directions, PSA close to deterministic |
-| 4. Manuscript | Tables in Word, figure legends, methods draft, CHEERS 2022 map | Tables agree with results |
+| 4. Manuscript | Tables in Word, figure legends, methods draft, CHEERS 2022 map, HTML report | Tables agree with results |
+
+8. **Share the results.** Send `outputs/report.html` to co-authors or clients. It is one file that opens in any browser and contains:
+   - summary cards;
+   - every figure and table, with the tables sortable;
+   - the model spec;
+   - the decision log, with the dated assumptions and sign-offs.
 
 ### Coming back later
 
@@ -74,10 +80,11 @@ All model numbers are in one file, `inputs/parameters.csv`. The R scripts read t
 SKILL.md                     Instructions that Claude follows
 assets/
   model_spec_template.md     The spec you fill in for each model
+  model_spec_form.html       Browser form for the spec; exports model_spec.md and parameters.csv
   utils_conversions.R        Rate/probability/HR/OR/RR conversions, discounting,
                              half-cycle correction, PSA distribution fitting,
                              background mortality from life tables
-  utils_outputs.R            Figure and table house style, standard plots
+  utils_outputs.R            Figure and table house style, standard plots, HTML report
   utils_tests.R              Automatic sanity tests
   ons_life_tables_uk.csv     ONS UK life tables by single year of age and sex
   ons_life_tables_uk_source.md  Which ONS release the CSV comes from
@@ -89,6 +96,7 @@ references/
 scripts/
   scaffold.py                Makes a new project folder
   prepare_ons.R              Rebuilds the ONS life table CSV from an ONS workbook
+  build_spec_form.R          Re-embeds the template in the spec form after a template change
 tests/
   toy_markov.R               Small worked 3-state Markov model
   test_toolkit.R             Known-answer tests for the R helpers
@@ -133,10 +141,10 @@ Rscript tests/test_outputs.R
 
 ## Status
 
-- Version 0.2: adds ONS life tables for background mortality, and fixes the repository layout to match SKILL.md.
-- Tested: the R helpers (50 known-answer checks, including background mortality against ONS life expectancy), and the figure and table output.
-- A demo model (the 3-state toy model) has been built by Claude through Checkpoint 2.
-- Not tested yet: the scaffold script's new step that copies the life table (it was written without Python available), and a full model built from a real spec. Do both before you use the skill for a submission.
+- Version 0.3: adds the browser spec form (model_spec_form.html) and the self-contained HTML report (build_report()). Version 0.2 added ONS life tables for background mortality.
+- Tested: the R helpers (51 known-answer checks, including background mortality against ONS life expectancy and the form/template match), the figure, table and report output, and the spec form round trip (its self-test, and loading a filled spec written for an older template).
+- A demo model (the 3-state toy model) has been built by Claude through Stage 3, with an HTML report.
+- Not tested yet: the scaffold script's steps that copy the life table and the spec form (written without Python available), and a full model built from a real spec. Do both before you use the skill for a submission.
 
 ## References
 

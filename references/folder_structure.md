@@ -5,6 +5,7 @@
 ```
 <project-name>/
 ├── model_spec.md            # the filled-in spec; source of design decisions
+├── model_spec_form.html     # browser form that writes model_spec.md (copied from the skill)
 ├── README.md                # what the model is and how to run it
 ├── run_all.R                # runs every script in order from a clean session
 ├── <project-name>.Rproj     # makes here::here() find the root
@@ -21,7 +22,7 @@
 │   ├── 03b_hand_check.R     # cycles 1–2 printed for a hand check
 │   ├── 04_dsa.R
 │   ├── 05_psa.R
-│   ├── 06_outputs.R         # rebuilds every figure and table from saved results
+│   ├── 06_outputs.R         # rebuilds every figure and table from saved results; builds report.html
 │   ├── 07_budget_impact.R   # only if the module is on
 │   ├── 08_dcea.R            # only if the module is on
 │   ├── utils_conversions.R  # conversions, discounting, PSA fitting (copied from the skill)
@@ -29,8 +30,9 @@
 │   └── utils_tests.R        # sanity tests (copied from the skill)
 ├── outputs/
 │   ├── figures/             # fig_*.tiff / .pdf / .png
-│   ├── tables/              # tab_*.docx / .csv
-│   └── results/             # *.rds model results and PSA draws
+│   ├── tables/              # tab_*.docx / .csv / .meta.json (title and footnote)
+│   ├── results/             # *.rds model results and PSA draws
+│   └── report.html          # self-contained HTML report to share (build_report())
 ├── manuscript/
 │   ├── tables.docx          # all tables compiled
 │   ├── figure_legends.md

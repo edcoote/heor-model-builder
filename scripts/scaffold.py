@@ -22,7 +22,8 @@ SCRIPTS = {
     "00_packages.R": (
         "# Packages used by every script\n"
         "pkgs <- c(\"here\", \"dplyr\", \"tidyr\", \"ggplot2\", \"scales\",\n"
-        "          \"flextable\", \"officer\", \"readr\")\n"
+        "          \"flextable\", \"officer\", \"readr\", \"jsonlite\", \"base64enc\",\n"
+        "          \"htmltools\")\n"
         "missing <- pkgs[!pkgs %in% rownames(installed.packages())]\n"
         "if (length(missing)) install.packages(missing)\n"
         "invisible(lapply(pkgs, library, character.only = TRUE))\n"
@@ -45,7 +46,8 @@ SCRIPTS = {
     "03b_hand_check.R": "# Cycles 1-2 of one arm, printed for a hand check in Excel (Stage 2)\n",
     "04_dsa.R": "# One-way deterministic sensitivity analysis (Stage 3)\n",
     "05_psa.R": "# Probabilistic sensitivity analysis (Stage 3)\n",
-    "06_outputs.R": "# Rebuild every figure and table from outputs/results (Stage 4)\n",
+    "06_outputs.R": "# Rebuild every figure and table from outputs/results, then build\n"
+                    "# outputs/report.html with build_report() (Stage 4)\n",
 }
 
 OPTIONAL_SCRIPTS = {
@@ -110,6 +112,12 @@ def main() -> None:
     if not spec.exists():
         shutil.copy(ASSETS / "model_spec_template.md", spec)
         created.append("model_spec.md")
+
+    # Browser form for filling in the spec (exports model_spec.md)
+    form = root / "model_spec_form.html"
+    if not form.exists():
+        shutil.copy(ASSETS / "model_spec_form.html", form)
+        created.append("model_spec_form.html")
 
     # Outputs script runs last so it can use results from optional modules
     order = sorted(f for f in scripts if f != "06_outputs.R") + ["06_outputs.R"]

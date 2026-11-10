@@ -1,0 +1,834 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Model spec form</title>
+<!--
+  heor-model-builder: model spec form.
+  Open this file in a browser (double-click). It works offline and sends
+  nothing anywhere. Fill in the spec, then export model_spec.md (and
+  parameters.csv) into the project folder.
+
+  The form is built from the template embedded below, so its fields always
+  match assets/model_spec_template.md. After editing the template, run
+  `Rscript scripts/build_spec_form.R` to re-embed it. Open the file with
+  ?selftest on the end of the address to run the round-trip self-test.
+-->
+<style>
+:root{--ink:#1d2433;--muted:#5b6475;--line:#e3e6ec;--bg:#fff;--soft:#f5f7fa;--accent:#0072B2;--warn:#b54708;--warn-bg:#fff6ed;--ok:#067647;--req:#d92d20}
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,Helvetica,sans-serif;color:var(--ink);background:var(--soft);font-size:15px;line-height:1.45}
+header.bar{position:sticky;top:0;z-index:5;background:var(--bg);border-bottom:1px solid var(--line);padding:10px 20px;display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+header.bar h1{font-size:17px;margin:0 12px 0 0}
+.progress{font-size:13px;color:var(--muted);margin-right:auto;display:flex;align-items:center;gap:8px}
+.progress .track{width:140px;height:8px;background:var(--line);border-radius:4px;overflow:hidden}
+.progress .fill{height:100%;background:var(--ok);width:0}
+button,.btn{font:inherit;font-size:14px;padding:7px 12px;border-radius:7px;border:1px solid var(--line);background:var(--bg);color:var(--ink);cursor:pointer;white-space:nowrap}
+button:hover,.btn:hover{border-color:var(--accent);color:var(--accent)}
+button.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+button.primary:hover{background:#005a8c;color:#fff}
+button.small{font-size:13px;padding:4px 9px}
+button.link{border:0;background:none;color:var(--accent);padding:2px 4px}
+.layout{display:flex;max-width:1250px;margin:0 auto}
+nav.side{position:sticky;top:58px;align-self:flex-start;width:220px;padding:18px 10px;max-height:calc(100vh - 60px);overflow-y:auto}
+nav.side a{display:flex;justify-content:space-between;gap:6px;padding:6px 8px;border-radius:6px;color:var(--ink);text-decoration:none;font-size:14px}
+nav.side a:hover{background:#e6eef6;color:var(--accent)}
+nav.side .count{font-size:12px;color:var(--muted)}
+nav.side .count.done{color:var(--ok)}
+main{flex:1;min-width:0;padding:18px 20px 80px}
+.intro{background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:14px 18px;margin-bottom:16px;font-size:14px;color:var(--muted)}
+.notice{border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:14px}
+.notice.info{background:#eef4fb;border:1px solid #c7dbef}
+.notice.warn{background:var(--warn-bg);border:1px solid #f9dbaf;color:var(--warn)}
+.notice.ok{background:#ecfdf3;border:1px solid #abefc6;color:var(--ok)}
+section.card{background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:6px 18px 14px;margin-bottom:16px;scroll-margin-top:70px}
+section.card h2{font-size:18px;margin:12px 0 8px}
+.field{display:grid;grid-template-columns:minmax(200px,34%) 1fr;gap:14px;padding:10px 0 10px 10px;border-top:1px solid var(--line);border-left:3px solid transparent}
+.field:first-of-type{border-top:0}
+.field.missing{border-left-color:var(--req)}
+.field .lab{font-size:14px}
+.badge{display:inline-block;font-size:11px;font-weight:bold;padding:1px 6px;border-radius:9px;margin-right:6px;vertical-align:1px}
+.badge.r{background:#fee4e2;color:var(--req)}
+.badge.o{background:var(--soft);color:var(--muted)}
+.hint{font-size:12.5px;color:var(--muted);margin-top:4px}
+.hint.uk{color:var(--warn)}
+textarea,input[type=text],input[type=search],select{font:inherit;font-size:14px;width:100%;padding:7px 9px;border:1px solid #cfd4dc;border-radius:7px;background:#fff;color:var(--ink)}
+textarea{resize:vertical;min-height:38px}
+textarea:focus,input:focus,select:focus{outline:2px solid #b3d4ef;border-color:var(--accent)}
+.opts{display:flex;flex-wrap:wrap;gap:8px}
+.opt{display:inline-flex;align-items:center;gap:6px;border:1px solid #cfd4dc;border-radius:18px;padding:5px 11px;background:#fff;font-size:14px;cursor:pointer}
+.opt.on{border-color:var(--accent);background:#eef4fb;color:#004f7c}
+.opt input[type=checkbox]{margin:0;accent-color:var(--accent)}
+.opt input.blank{width:140px;padding:2px 6px;font-size:13px}
+.muted{font-size:13px;color:var(--muted);margin:6px 0}
+.muted ul{margin:4px 0;padding-left:18px}
+.grid-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:8px;margin:8px 0}
+table.grid{border-collapse:collapse;font-size:13px;min-width:1150px;width:100%}
+table.grid th{background:var(--soft);text-align:left;padding:6px;border-bottom:1px solid var(--line);font-weight:bold;white-space:nowrap}
+table.grid td{padding:3px;border-bottom:1px solid var(--line)}
+table.grid input,table.grid select{padding:4px 6px;font-size:13px;border-radius:5px}
+table.grid td.bad input{border-color:var(--req);background:#fff5f5}
+.grid-tools{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.empty-grid{padding:14px;color:var(--muted);font-size:13px}
+dialog{border:1px solid var(--line);border-radius:10px;padding:18px;max-width:720px;width:92vw}
+dialog::backdrop{background:rgba(20,25,35,.35)}
+dialog textarea{min-height:200px;font-family:Consolas,monospace;font-size:12.5px}
+dialog .row{display:flex;gap:8px;justify-content:flex-end;margin-top:10px}
+#selftest{position:fixed;bottom:12px;right:12px;z-index:9;max-width:420px}
+@media (max-width:860px){nav.side{display:none}.field{grid-template-columns:1fr}header.bar h1{width:100%}}
+@media print{header.bar,nav.side,.grid-tools,button{display:none}body{background:#fff}section.card{border:0;break-inside:avoid-page}}
+</style>
+</head>
+<body>
+<header class="bar">
+  <h1>Model spec</h1>
+  <div class="progress"><span class="track"><span class="fill" id="pfill"></span></span><span id="ptext"></span></div>
+  <label class="btn" title="Open an existing model_spec.md to edit it">Open model_spec.md<input type="file" id="openSpec" accept=".md,.txt,text/markdown,text/plain" hidden></label>
+  <button id="exportCsv" title="Save the parameter table as inputs/parameters.csv">Export parameters.csv</button>
+  <button id="copySpec" title="Copy the spec as markdown">Copy</button>
+  <button class="primary" id="exportSpec" title="Save model_spec.md into the project folder">Export model_spec.md</button>
+</header>
+<div class="layout">
+  <nav class="side" id="nav"></nav>
+  <main id="main">
+    <div id="notices"></div>
+    <div class="intro" id="intro"></div>
+    <div id="form"></div>
+  </main>
+</div>
+
+<dialog id="pasteDlg">
+  <h3 style="margin-top:0">Paste parameters</h3>
+  <p class="muted">Paste rows copied from Excel, or CSV text. A header row with the column names is optional: without one, columns are read in the template order (name, description, base, low, high, distribution, param_1, param_2, input_type, source, notes). Pasted rows are added to the table.</p>
+  <textarea id="pasteText" placeholder="name&#9;description&#9;base&#9;low&#9;high&#9;..."></textarea>
+  <div class="row"><button id="pasteCancel">Cancel</button><button class="primary" id="pasteOk">Add rows</button></div>
+</dialog>
+
+<script type="text/plain" id="spec-template"># Model specification
+
+Fill in every field marked **[R]** (required). Fields marked [O] are optional; leave blank to accept the default shown, and Claude will list the defaults it used before building. Tick options with `[x]`.
+
+---
+
+## 1. Project
+
+| Field | Entry |
+|---|---|
+| **[R]** Project name (used as folder name, lowercase-hyphens) | |
+| **[R]** One-line decision problem | |
+| **[R]** Purpose | [ ] Journal manuscript [ ] HTA / payer submission [ ] Internal decision [ ] Conference |
+| [O] Target journal (sets figure widths, word and figure limits) | |
+| [O] Figure limit / table limit / word limit | |
+| [O] Deadline | |
+
+## 2. Decision problem (PICO)
+
+| Field | Entry |
+|---|---|
+| **[R]** Population (age at entry, sex mix as % female, key characteristics; age and sex mix drive background mortality) | |
+| **[R]** Intervention | |
+| **[R]** Comparator(s) | |
+| **[R]** Setting / country | |
+| [O] Subgroups to report separately | |
+
+## 3. Evaluation type and reference case
+
+| Field | Entry |
+|---|---|
+| **[R]** Evaluation type | [ ] CUA (QALYs) [ ] CEA (natural units: ______) [ ] CBA [ ] CCA [ ] Cost-minimisation |
+| **[R]** Perspective | [ ] NHS & PSS [ ] Healthcare payer (non-UK: ______) [ ] Societal [ ] Patient / out-of-pocket [ ] Provider |
+| **[R]** Time horizon | [ ] Lifetime [ ] Fixed: ____ years |
+| [O] Discount rate, costs / outcomes (default 3.5% / 3.5%) | / |
+| [O] Currency and price year (default GBP, latest year of inputs) | |
+| [O] Inflation index (default NHSCII / PSSRU) | |
+| [O] Willingness-to-pay threshold(s) (confirm the current NICE position) | |
+| [O] Reference case to follow (default NICE) | [ ] NICE [ ] ISPOR-SMDM good practice [ ] Other: ______ |
+
+## 4. Model structure
+
+| Field | Entry |
+|---|---|
+| **[R]** Model type | [ ] Decision tree [ ] Markov cohort [ ] Decision tree + Markov [ ] Partitioned survival [ ] Microsimulation [ ] Discrete event simulation |
+| **[R]** Disease transmission | [ ] Non-communicable (static model) [ ] Communicable (dynamic model needed: ______) |
+| **[R]** Health states (list; mark absorbing states) | |
+| **[R]** Allowed transitions (list "from → to", or attach a diagram) | |
+| **[R]** Cycle length | [ ] 1 month [ ] 3 months [ ] 6 months [ ] 1 year [ ] Other: ______ |
+| [O] Half-cycle correction (default: life-table method, applied to costs and QALYs) | [ ] Life-table [ ] Simpson's 1/3 [ ] None (justify): ______ |
+| [O] Background mortality (default for UK: ONS life tables bundled with the skill, age- and sex-specific; non-UK: attach a national life table) | |
+| [O] Tunnel states / time-dependent transitions | |
+| [O] Treatment effect waning | |
+
+## 5. Inputs
+
+Fill one row per parameter, or attach a CSV with these columns. This becomes `inputs/parameters.csv`.
+
+**[R]** Input form for transitions: tick each that appears below so Claude converts correctly.
+[ ] Per-cycle probabilities [ ] Probabilities over a different period [ ] Rates [ ] Hazard ratios [ ] Odds ratios [ ] Relative risks [ ] Survival curves (KM / parametric)
+
+| name | description | base | low | high | distribution | param_1 | param_2 | input_type | source | notes |
+|---|---|---|---|---|---|---|---|---|---|---|
+| p_example | Annual probability of X | 0.05 | 0.03 | 0.08 | beta | 50 | 950 | probability (1 yr) | Author 2024 | |
+
+- `distribution`: beta, gamma, lognormal, normal, dirichlet, fixed. Leave blank and Claude will propose one from the parameter type.
+- `low`/`high`: 95% CI where available; otherwise state the range rule in notes (e.g. ±20%).
+- `input_type`: probability (period), rate, HR, OR, RR, cost, utility, disutility, count.
+
+## 6. Costs and outcomes
+
+| Field | Entry |
+|---|---|
+| **[R]** Cost categories included | |
+| [O] One-off vs per-cycle costs (list each) | |
+| **[R]** Utility source and instrument (e.g. EQ-5D-3L, UK tariff; mapped from OHIP-14) | |
+| [O] Disutilities (adverse events, procedures) and their duration | |
+| [O] Age-adjustment of utilities (default: yes, Ara & Brazier general population norms) | |
+
+## 7. Analyses and uncertainty
+
+| Field | Entry |
+|---|---|
+| **[R]** Primary outcome | [ ] ICER [ ] NMB at £____ [ ] Both |
+| **[R]** Uncertainty analyses | [ ] One-way DSA [ ] Threshold analysis [ ] PSA [ ] Scenario analyses [ ] EVPI [ ] EVPPI |
+| [O] PSA iterations (default 5,000) and seed (default 2026) | |
+| [O] Parameters for DSA (default: all with low/high) | |
+| [O] Scenario analyses (list each, one line each) | |
+| [O] Structural uncertainty to test | |
+
+## 8. Optional modules
+
+**Budget impact** [ ] Include
+| Field | Entry |
+|---|---|
+| Eligible population and source | |
+| Uptake by year (Y1–Y5) | |
+| Market shares with / without intervention | |
+| Time horizon (default 5 years, undiscounted) | |
+| Payer | |
+
+**Distributional CEA** [ ] Include
+| Field | Entry |
+|---|---|
+| Equity-relevant grouping (default IMD quintile) | |
+| Baseline health distribution source (e.g. QALE by IMD quintile) | |
+| Uptake / need by group | |
+| Opportunity cost distribution source | |
+| Inequality aversion parameters to report (Atkinson ε) | |
+| Outputs | [ ] Equity-efficiency impact plane [ ] Health inequality impact [ ] Equity-weighted NHB |
+
+## 9. Outputs wanted
+
+[ ] Model structure diagram
+[ ] Inputs table
+[ ] Base case results table
+[ ] Markov trace
+[ ] CE plane
+[ ] CEAC (and CEAF if 3+ strategies)
+[ ] Tornado diagram
+[ ] Scenario results table
+[ ] Budget impact table and chart
+[ ] DCEA outputs
+[ ] Methods text draft
+[ ] CHEERS 2022 checklist
+
+[O] Anything special about figures (journal colour policy, greyscale only, font): ______
+
+## 10. Notes for Claude
+
+Anything else: data files to read, existing code to reuse, decisions already made with co-authors, things not to do.
+</script><!--/spec-template-->
+
+<script>
+"use strict";
+var TEMPLATE = document.getElementById("spec-template").textContent.replace(/\r\n/g, "\n");
+var DRAFT_KEY = "heor-spec-form-draft-v1";
+var PARAM_COLS = ["name","description","base","low","high","distribution","param_1","param_2","input_type","source","notes"];
+var DISTS = ["", "beta", "gamma", "lognormal", "normal", "dirichlet", "fixed"];
+var INPUT_TYPES = ["probability (1 yr)", "probability (period)", "rate", "HR", "OR", "RR", "cost", "utility", "disutility", "count"];
+var BLANK_RE = /_{3,}/g;
+var OPT_RE = /\[[ xX]\]/;
+// Tick boxes inside `code` (e.g. "Tick options with `[x]`") are not fields
+function hasOpts(l) { return OPT_RE.test(l.replace(/`[^`]*`/g, "")); }
+var UK_RE = /\b(uk|u\.k\.|united kingdom|england|scotland|wales|northern ireland|nhs)\b/i;
+
+// ---- Parsing ---------------------------------------------------------------
+
+function splitCells(line) {
+  var s = line.trim().replace(/^\|/, "").replace(/\|$/, "");
+  return s.split(/(?<!\\)\|/).map(function (c) { return c.trim(); });
+}
+function isSep(line) { return /^\s*\|[\s:|-]+\|\s*$/.test(line) && line.indexOf("-") > -1; }
+function normKey(s) {
+  return s.replace(/\*\*/g, "").replace(/\[(R|O)\]/g, "").replace(/\(.*?\)/g, "")
+    .replace(/[^a-z0-9]+/gi, " ").trim().toLowerCase();
+}
+function parseOptions(text) {
+  var i = text.search(OPT_RE);
+  var prefix = text.slice(0, i);
+  var parts = text.slice(i).split(/(?=\[[ xX]\])/);
+  var opts = parts.map(function (p) {
+    var checked = /^\[[xX]\]/.test(p);
+    var label = p.replace(/^\[[ xX]\]\s?/, "").replace(/\s+$/, "");
+    return { label: label, checked: checked };
+  });
+  return { prefix: prefix, opts: opts };
+}
+function blankCount(label) { return (label.match(BLANK_RE) || []).length; }
+function labelRegex(tplLabel) {
+  var esc = tplLabel.split(BLANK_RE).map(function (s) {
+    return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/\s+/g, "\\s*");
+  });
+  // Allow a note after a label that does not end in a blank, e.g.
+  // "Both *(threshold to confirm)*" still matches "Both"
+  var tail = /_{3,}\s*$/.test(tplLabel) ? "" : "(?:\\s.*)?";
+  return new RegExp("^" + esc.join("(.*?)") + tail + "$");
+}
+
+// Template -> blocks. Each block keeps the original text so an untouched
+// form exports the template exactly.
+function parseTemplate(text) {
+  var lines = text.split("\n");
+  var blocks = [], section = null, i = 0, prevText = "";
+  while (i < lines.length) {
+    var l = lines[i];
+    if (/^## /.test(l)) {
+      section = l.replace(/^## /, "");
+      blocks.push({ kind: "heading", text: l, section: section });
+      i++; continue;
+    }
+    if (/^\s*\|/.test(l)) {
+      var cells = splitCells(l);
+      if (cells.length > 2 && !isSep(l)) {
+        // Wide table = parameter grid: header, separator, example rows
+        var j = i + 1, rows = [];
+        while (j < lines.length && /^\s*\|/.test(lines[j])) { if (!isSep(lines[j])) rows.push(lines[j]); j++; }
+        blocks.push({ kind: "grid", section: section, header: l, sep: lines[i + 1], tplRows: rows, cols: cells, rows: [] });
+        i = j; continue;
+      }
+      if (cells.length === 2 && !isSep(l) && !/^(Field)$/.test(cells[0])) {
+        var b = { kind: "row", section: section, label: cells[0], tplCell: cells[1], key: normKey(section || "") + "::" + normKey(cells[0]),
+                  required: /\[R\]/.test(cells[0]) };
+        if (OPT_RE.test(cells[1])) { b.slot = "options"; b.opts = parseOptions(cells[1]).opts.map(function (o) { return { label: o.label, checked: false, vals: [] }; }); }
+        else { b.slot = "text"; b.value = ""; }
+        blocks.push(b); prevText = l; i++; continue;
+      }
+      blocks.push({ kind: "static", section: section, text: l });
+      i++; continue;
+    }
+    if (hasOpts(l)) {
+      var po = parseOptions(l);
+      blocks.push({ kind: "lineopts", section: section, text: l, prefix: po.prefix,
+                    required: /\[R\]/.test(po.prefix) || /\*\*\[R\]\*\*/.test(prevText) && !po.prefix.trim(),
+                    opts: po.opts.map(function (o) { return { label: o.label, checked: false, vals: [] }; }) });
+      if (l.trim()) prevText = l;
+      i++; continue;
+    }
+    if (BLANK_RE.test(l) && !/^\s*\|/.test(l)) {
+      BLANK_RE.lastIndex = 0;
+      var k = l.search(BLANK_RE), m = l.match(BLANK_RE)[0];
+      blocks.push({ kind: "lineblank", section: section, text: l, before: l.slice(0, k), after: l.slice(k + m.length), blank: m, value: "" });
+      prevText = l; i++; continue;
+    }
+    blocks.push({ kind: "static", section: section, text: l });
+    if (l.trim()) prevText = l;
+    i++;
+  }
+  // Notes: free text after the last section's first paragraph
+  var lastHead = -1;
+  blocks.forEach(function (b, idx) { if (b.kind === "heading") lastHead = idx; });
+  if (lastHead > -1 && /notes/i.test(blocks[lastHead].section)) {
+    var end = blocks.length;
+    while (end > lastHead + 1 && blocks[end - 1].kind === "static" && !blocks[end - 1].text.trim()) end--;
+    var para = blocks.slice(lastHead + 1, end).map(function (b) { return b.text; }).join("\n").trim();
+    blocks.splice(end, 0, { kind: "notes", section: blocks[lastHead].section, value: "", para: para });
+  }
+  return blocks;
+}
+
+// ---- Export ------------------------------------------------------------------
+
+function cellSafe(v) { return v.replace(/\r?\n+/g, "; ").replace(/\|/g, "\\|").trim(); }
+function fillBlanks(label, vals) {
+  var n = 0;
+  return label.replace(BLANK_RE, function (m) { var v = (vals[n++] || "").trim(); return v ? cellSafe(v) : m; });
+}
+function optsText(prefix, opts) {
+  return prefix + opts.map(function (o) { return "[" + (o.checked ? "x" : " ") + "] " + fillBlanks(o.label, o.vals); }).join(" ");
+}
+function exportSpec(blocks) {
+  var out = [];
+  blocks.forEach(function (b) {
+    switch (b.kind) {
+      case "heading": case "static": out.push(b.text); break;
+      case "row":
+        var cell = b.slot === "options" ? optsText("", b.opts) : (b.value.trim() ? cellSafe(b.value) : b.tplCell);
+        out.push("| " + b.label + " | " + (cell ? cell + " " : "") + "|");
+        break;
+      case "lineopts": out.push(optsText(b.prefix, b.opts)); break;
+      case "lineblank": out.push(b.before + (b.value.trim() ? b.value.trim() : b.blank) + b.after); break;
+      case "grid":
+        out.push(b.header); out.push(b.sep);
+        var rows = b.rows.filter(function (r) { return PARAM_COLS.some(function (c) { return (r[c] || "").trim(); }); });
+        if (!rows.length) { b.tplRows.forEach(function (r) { out.push(r); }); }
+        else rows.forEach(function (r) {
+          out.push("| " + b.cols.map(function (c) { return cellSafe(r[c] || ""); }).join(" | ") + " |");
+        });
+        break;
+      // A blank line first, so the notes stay a separate paragraph
+      case "notes": if (b.value.trim()) { out.push(""); out.push(b.value.trim()); } break;
+    }
+  });
+  return out.join("\n");
+}
+function csvField(v) { v = (v || "").trim(); return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; }
+function exportCsv(blocks) {
+  var g = blocks.filter(function (b) { return b.kind === "grid"; })[0];
+  var rows = g ? g.rows.filter(function (r) { return (r.name || "").trim(); }) : [];
+  return PARAM_COLS.join(",") + "\n" + rows.map(function (r) {
+    return PARAM_COLS.map(function (c) { return csvField(r[c]); }).join(",");
+  }).join("\n") + (rows.length ? "\n" : "");
+}
+
+// ---- Loading a filled spec into the template blocks ----------------------------------
+
+function loadSpec(text, blocks) {
+  var lines = text.replace(/\r\n/g, "\n").split("\n");
+  // Rows are keyed by section + label: the same label (e.g. "Time horizon")
+  // can appear in more than one section.
+  var rowMap = {}, used = {}, sec = "";
+  lines.forEach(function (l) {
+    if (/^## /.test(l)) sec = l.replace(/^## /, "");
+    if (/^\s*\|/.test(l) && !isSep(l)) { var c = splitCells(l); if (c.length === 2) rowMap[normKey(sec) + "::" + normKey(c[0])] = c[1].replace(/\\\|/g, "|"); }
+  });
+  function fillOpts(target, filledText) {
+    var got = parseOptions(filledText).opts;
+    target.forEach(function (o) {
+      var re = labelRegex(o.label);
+      var hit = got.filter(function (g) { return re.test(g.label); })[0];
+      o.checked = !!(hit && hit.checked);
+      o.vals = [];
+      if (hit && blankCount(o.label)) {
+        var m = hit.label.match(re);
+        for (var k = 1; m && k < m.length; k++) o.vals.push(/^_{3,}$/.test(m[k].trim()) ? "" : m[k].trim());
+      }
+    });
+  }
+  blocks.forEach(function (b) {
+    if (b.kind === "row") {
+      var v = rowMap[b.key];
+      if (v === undefined) {
+        var sp = b.key.split("::"), pre = sp[0] + "::" + sp[1].slice(0, 12);
+        var alt = Object.keys(rowMap).filter(function (k) { return k.slice(0, pre.length) === pre; })[0];
+        v = alt !== undefined ? rowMap[alt] : undefined;
+      }
+      if (v === undefined) return;
+      if (b.slot === "options") fillOpts(b.opts, OPT_RE.test(v) ? v : "");
+      else b.value = (v === b.tplCell ? "" : v);
+    } else if (b.kind === "lineopts") {
+      var first = labelRegex(b.opts[0].label);
+      var line = lines.filter(function (l, idx) {
+        if (used[idx] || /^\s*\|/.test(l) || !hasOpts(l)) return false;
+        var p = parseOptions(l);
+        return p.prefix.trim() === b.prefix.trim() && p.opts.length && first.test(p.opts[0].label);
+      })[0];
+      if (line !== undefined) { used[lines.indexOf(line)] = true; fillOpts(b.opts, line); }
+    } else if (b.kind === "lineblank") {
+      var ln = lines.filter(function (l) { return l.indexOf(b.before) === 0 && b.before.trim(); })[0];
+      if (ln !== undefined) {
+        var val = ln.slice(b.before.length);
+        if (b.after && val.slice(-b.after.length) === b.after) val = val.slice(0, -b.after.length);
+        b.value = /^_{3,}$/.test(val.trim()) ? "" : val.trim();
+      }
+    } else if (b.kind === "grid") {
+      var h = lines.findIndex(function (l) { return /^\s*\|/.test(l) && splitCells(l)[0] === b.cols[0] && splitCells(l).length === b.cols.length; });
+      b.rows = [];
+      if (h > -1) {
+        for (var j = h + 1; j < lines.length && /^\s*\|/.test(lines[j]); j++) {
+          if (isSep(lines[j])) continue;
+          var c = splitCells(lines[j]).map(function (x) { return x.replace(/\\\|/g, "|"); });
+          if (c[0] === "p_example") continue;
+          var r = {}; b.cols.forEach(function (col, k) { r[col] = c[k] || ""; });
+          b.rows.push(r);
+        }
+      }
+    } else if (b.kind === "notes") {
+      var hi = lines.findIndex(function (l) { return /^## /.test(l) && /notes/i.test(l); });
+      if (hi > -1) {
+        // Drop the template's own paragraph if it is still there; keep
+        // anything else, including text written in its place
+        var rest = lines.slice(hi + 1).join("\n").trim();
+        if (b.para && rest.indexOf(b.para) === 0) rest = rest.slice(b.para.length).trim();
+        b.value = rest;
+      }
+    }
+  });
+}
+
+// ---- Rendering -------------------------------------------------------------------
+
+var blocks = parseTemplate(TEMPLATE);
+
+function esc(s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;"); }
+function inlineMd(s) {
+  return esc(s).replace(/`([^`]+)`/g, "<code>$1</code>").replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+}
+function labelHtml(label) {
+  var badge = /\[R\]/.test(label) ? '<span class="badge r">Required</span>' : /\[O\]/.test(label) ? '<span class="badge o">Optional</span>' : "";
+  return badge + inlineMd(label.replace(/\*\*\[R\]\*\*\s*|\[R\]\s*|\[O\]\s*/g, ""));
+}
+function sectionId(s) { return "s-" + (s || "top").toLowerCase().replace(/[^a-z0-9]+/g, "-"); }
+
+function optsHtml(b, idx) {
+  return '<div class="opts">' + b.opts.map(function (o, k) {
+    var parts = o.label.split(BLANK_RE), html = "";
+    parts.forEach(function (p, n) {
+      html += inlineMd(p);
+      if (n < parts.length - 1) html += '<input type="text" class="blank" data-b="' + idx + '" data-o="' + k + '" data-v="' + n + '" value="' + esc(o.vals[n] || "") + '" placeholder="specify">';
+    });
+    return '<label class="opt' + (o.checked ? " on" : "") + '"><input type="checkbox" data-b="' + idx + '" data-o="' + k + '"' + (o.checked ? " checked" : "") + ">" + html + "</label>";
+  }).join("") + "</div>";
+}
+
+function gridHtml(b, idx) {
+  var head = "<tr>" + b.cols.map(function (c) { return "<th>" + esc(c) + "</th>"; }).join("") + "<th></th></tr>";
+  var body = b.rows.map(function (r, ri) {
+    return "<tr>" + b.cols.map(function (c) {
+      var v = r[c] || "", bad = gridCellBad(r, c);
+      if (c === "distribution") {
+        return '<td><select data-g="' + idx + '" data-r="' + ri + '" data-c="' + c + '">' +
+          DISTS.concat(DISTS.indexOf(v) < 0 ? [v] : []).map(function (d) { return '<option value="' + esc(d) + '"' + (d === v ? " selected" : "") + ">" + (d || "(propose)") + "</option>"; }).join("") + "</select></td>";
+      }
+      var w = { name: 110, description: 220, source: 160, notes: 180, input_type: 140 }[c] || 70;
+      return '<td' + (bad ? ' class="bad" title="' + esc(bad) + '"' : "") + '><input type="text" style="min-width:' + w + 'px" data-g="' + idx + '" data-r="' + ri + '" data-c="' + c + '" value="' + esc(v) + '"' +
+        (c === "input_type" ? ' list="inputTypes"' : "") + (c === "name" ? ' placeholder="e.g. p_example"' : "") + "></td>";
+    }).join("") + '<td><button class="small link" data-del="' + ri + '" data-g="' + idx + '" title="Delete row">✕</button></td></tr>';
+  }).join("");
+  var example = b.tplRows.map(function (r) { return splitCells(r).join(", "); }).join(" / ");
+  return '<div class="grid-tools"><button class="small" data-add="' + idx + '">+ Add parameter</button>' +
+    '<button class="small" data-paste="' + idx + '">Paste from Excel / CSV</button>' +
+    '<label class="btn small" style="font-size:13px;padding:4px 9px">Import parameters.csv<input type="file" accept=".csv,text/csv" data-import="' + idx + '" hidden></label>' +
+    '<span class="muted">' + b.rows.length + " parameter" + (b.rows.length === 1 ? "" : "s") + "</span></div>" +
+    (b.rows.length ? '<div class="grid-wrap"><table class="grid"><thead>' + head + "</thead><tbody>" + body + "</tbody></table></div>"
+      : '<div class="grid-wrap"><div class="empty-grid">No parameters yet. Example row from the template: ' + esc(example) + "</div></div>") +
+    '<datalist id="inputTypes">' + INPUT_TYPES.map(function (t) { return '<option value="' + esc(t) + '">'; }).join("") + "</datalist>";
+}
+function num(v) { var n = parseFloat(v); return isNaN(n) ? null : n; }
+function gridCellBad(r, c) {
+  var base = num(r.base), low = num(r.low), high = num(r.high), t = (r.input_type || "").toLowerCase();
+  if (c === "low" && low !== null && base !== null && low > base) return "Low is above the base value";
+  if (c === "high" && high !== null && base !== null && high < base) return "High is below the base value";
+  if (c === "base" && base !== null && /probab|utility/.test(t) && !/disutility/.test(t) && (base < 0 || base > 1)) return "Probabilities and utilities must lie between 0 and 1";
+  if (c === "high" && high !== null && /^utility/.test(t) && high > 1) return "Utility above 1";
+  if (c === "name" && r.name && !/^[A-Za-z][A-Za-z0-9_.]*$/.test(r.name)) return "Use letters, numbers and underscores, starting with a letter";
+  return "";
+}
+
+function isFilled(b) {
+  if (b.slot === "options" || b.kind === "lineopts") return b.opts.some(function (o) { return o.checked; });
+  return !!(b.value || "").trim();
+}
+function settingIsUK() {
+  return blocks.some(function (b) { return b.kind === "row" && /setting/.test(b.key) && UK_RE.test(b.value || ""); });
+}
+
+function render() {
+  var form = document.getElementById("form"), html = "", open = false, staticBuf = [];
+  function flushStatic() {
+    var t = staticBuf.join("\n").trim(); staticBuf = [];
+    if (!t || /^---$/.test(t)) return;
+    var lines = t.split("\n").filter(function (l) { return !/^\s*\|/.test(l) && l.trim() !== "---"; });
+    if (!lines.length) return;
+    var bullets = lines.filter(function (l) { return /^\s*- /.test(l); });
+    var other = lines.filter(function (l) { return !/^\s*- /.test(l); });
+    html += '<div class="muted">' + other.map(function (l) { return "<div>" + inlineMd(l) + "</div>"; }).join("") +
+      (bullets.length ? "<ul>" + bullets.map(function (l) { return "<li>" + inlineMd(l.replace(/^\s*- /, "")) + "</li>"; }).join("") + "</ul>" : "") + "</div>";
+  }
+  var uk = settingIsUK();
+  blocks.forEach(function (b, idx) {
+    if (!b.section) return;                    // title and intro: shown above
+    if (b.kind !== "static") flushStatic();
+    switch (b.kind) {
+      case "heading":
+        if (open) html += "</section>";
+        html += '<section class="card" id="' + sectionId(b.section) + '"><h2>' + esc(b.section) + "</h2>";
+        open = true; break;
+      case "static": staticBuf.push(b.text); break;
+      case "row":
+        var miss = b.required && !isFilled(b), hint = "";
+        if (uk && /::population/.test(b.key)) hint = '<div class="hint uk">UK model: give the age at entry and the % female. The bundled ONS life tables need them for background mortality.</div>';
+        if (/::background mortality/.test(b.key)) hint = '<div class="hint">' + (uk ? "Leave blank to use the ONS life tables bundled with the skill." : "Non-UK setting: attach a national life table (same format as the bundled ONS table).") + "</div>";
+        html += '<div class="field' + (miss ? " missing" : "") + '" id="f' + idx + '"><div class="lab">' + labelHtml(b.label) + hint + "</div><div>" +
+          (b.slot === "options" ? optsHtml(b, idx)
+            : '<textarea rows="1" data-b="' + idx + '" placeholder="' + esc(b.tplCell && b.tplCell !== "/" ? b.tplCell : b.tplCell === "/" ? "costs / outcomes" : "") + '">' + esc(b.value) + "</textarea>") +
+          "</div></div>";
+        break;
+      case "lineopts":
+        var lab = b.prefix.trim() ? labelHtml(b.prefix.trim()) : (b.required ? '<span class="badge r">Required</span>Tick each that applies' : "");
+        html += '<div class="field' + (b.required && !isFilled(b) ? " missing" : "") + '" id="f' + idx + '"><div class="lab">' + lab + "</div><div>" + optsHtml(b, idx) + "</div></div>";
+        break;
+      case "lineblank":
+        html += '<div class="field" id="f' + idx + '"><div class="lab">' + labelHtml(b.before.replace(/:\s*$/, "")) + '</div><div><textarea rows="1" data-b="' + idx + '">' + esc(b.value) + "</textarea></div></div>";
+        break;
+      case "grid": html += gridHtml(b, idx); break;
+      case "notes":
+        html += '<div class="field" id="f' + idx + '"><div class="lab">Notes for Claude</div><div><textarea rows="4" data-b="' + idx + '" placeholder="Data files to read, existing code to reuse, decisions made with co-authors, things not to do">' + esc(b.value) + "</textarea></div></div>";
+        break;
+    }
+  });
+  flushStatic();
+  if (open) html += "</section>";
+  form.innerHTML = html;
+  autoGrow();
+  renderNav(); renderProgress();
+}
+
+function renderIntro() {
+  var intro = blocks.filter(function (b) { return !b.section && b.kind === "static" && b.text.trim() && !/^#|^---$/.test(b.text); })
+    .map(function (b) { return inlineMd(b.text); }).join(" ");
+  document.getElementById("intro").innerHTML = intro + "<br><br>Your answers are kept in this browser as a draft until you export. Export <strong>model_spec.md</strong> (and <strong>parameters.csv</strong> if you filled in the parameter table) into the project folder, then tell Claude <code>spec is done</code>.";
+}
+function renderNav() {
+  var html = "", cur = null, counts = {};
+  blocks.forEach(function (b) {
+    if (!b.section) return;
+    var c = counts[b.section] = counts[b.section] || { req: 0, done: 0 };
+    if ((b.kind === "row" || b.kind === "lineopts") && b.required) { c.req++; if (isFilled(b)) c.done++; }
+  });
+  blocks.forEach(function (b) {
+    if (b.kind !== "heading") return;
+    var c = counts[b.section];
+    html += '<a href="#' + sectionId(b.section) + '"><span>' + esc(b.section) + "</span>" +
+      (c.req ? '<span class="count' + (c.done === c.req ? " done" : "") + '">' + (c.done === c.req ? "✓" : c.done + "/" + c.req) + "</span>" : "") + "</a>";
+  });
+  document.getElementById("nav").innerHTML = html;
+}
+function renderProgress() {
+  var req = blocks.filter(function (b) { return (b.kind === "row" || b.kind === "lineopts") && b.required; });
+  var done = req.filter(isFilled).length;
+  document.getElementById("pfill").style.width = (req.length ? 100 * done / req.length : 0) + "%";
+  document.getElementById("ptext").textContent = done + " of " + req.length + " required fields done";
+}
+function autoGrow() {
+  document.querySelectorAll("#form textarea").forEach(function (t) { t.style.height = "auto"; t.style.height = (t.scrollHeight + 2) + "px"; });
+}
+function notice(msg, kind, keep) {
+  var n = document.getElementById("notices");
+  n.innerHTML = '<div class="notice ' + (kind || "info") + '">' + msg + "</div>";
+  if (!keep) setTimeout(function () { if (n.firstChild && n.firstChild.innerHTML.indexOf(msg.slice(0, 20)) > -1) n.innerHTML = ""; }, 6000);
+}
+
+// ---- Events ----------------------------------------------------------------------
+
+var form = document.getElementById("form");
+form.addEventListener("input", function (e) {
+  var t = e.target, b;
+  if (t.dataset.g !== undefined) {
+    var g = blocks[+t.dataset.g]; g.rows[+t.dataset.r][t.dataset.c] = t.value;
+    var bad = gridCellBad(g.rows[+t.dataset.r], t.dataset.c), td = t.parentNode;
+    td.classList.toggle("bad", !!bad); td.title = bad;
+  } else if (t.classList.contains("blank")) {
+    b = blocks[+t.dataset.b]; b.opts[+t.dataset.o].vals[+t.dataset.v] = t.value;
+    if (t.value.trim() && !b.opts[+t.dataset.o].checked) {      // typing in a blank ticks its option
+      b.opts[+t.dataset.o].checked = true;
+      t.closest(".opt").classList.add("on");
+      t.closest(".opt").querySelector("input[type=checkbox]").checked = true;
+      refreshField(+t.dataset.b);
+    }
+  } else if (t.tagName === "TEXTAREA") {
+    b = blocks[+t.dataset.b]; b.value = t.value;
+    t.style.height = "auto"; t.style.height = (t.scrollHeight + 2) + "px";
+    refreshField(+t.dataset.b);
+    if (/setting/.test(b.key || "")) { var y = window.scrollY; render(); window.scrollTo(0, y); }
+  }
+  saveDraft();
+});
+form.addEventListener("change", function (e) {
+  var t = e.target;
+  if (t.type === "checkbox") {
+    var b = blocks[+t.dataset.b]; b.opts[+t.dataset.o].checked = t.checked;
+    t.closest(".opt").classList.toggle("on", t.checked);
+    refreshField(+t.dataset.b);
+  } else if (t.tagName === "SELECT") {
+    blocks[+t.dataset.g].rows[+t.dataset.r][t.dataset.c] = t.value;
+  } else if (t.dataset.import !== undefined && t.files[0]) {
+    var gi = +t.dataset.import, rd = new FileReader();
+    rd.onload = function () { addRows(blocks[gi], parseDelimited(rd.result)); t.value = ""; };
+    rd.readAsText(t.files[0]);
+    return;
+  }
+  saveDraft();
+});
+form.addEventListener("click", function (e) {
+  var t = e.target.closest("button"); if (!t) return;
+  var y = window.scrollY;
+  if (t.dataset.add !== undefined) { blocks[+t.dataset.add].rows.push({}); render(); window.scrollTo(0, y); saveDraft(); }
+  if (t.dataset.del !== undefined) { blocks[+t.dataset.g].rows.splice(+t.dataset.del, 1); render(); window.scrollTo(0, y); saveDraft(); }
+  if (t.dataset.paste !== undefined) { pasteTarget = +t.dataset.paste; document.getElementById("pasteText").value = ""; document.getElementById("pasteDlg").showModal(); }
+});
+function refreshField(idx) {
+  var b = blocks[idx], el = document.getElementById("f" + idx);
+  if (el && b.required) el.classList.toggle("missing", !isFilled(b));
+  renderNav(); renderProgress();
+}
+
+// Delimited text (Excel paste = tabs, or CSV with quotes) -> rows of cells
+function parseDelimited(text) {
+  text = text.replace(/\r\n/g, "\n").replace(/\n+$/, "");
+  var delim = text.split("\n")[0].indexOf("\t") > -1 ? "\t" : ",";
+  var rows = [], row = [], cell = "", q = false;
+  for (var i = 0; i < text.length; i++) {
+    var ch = text[i];
+    if (q) { if (ch === '"' && text[i + 1] === '"') { cell += '"'; i++; } else if (ch === '"') q = false; else cell += ch; }
+    else if (ch === '"' && !cell) q = true;
+    else if (ch === delim) { row.push(cell); cell = ""; }
+    else if (ch === "\n") { row.push(cell); rows.push(row); row = []; cell = ""; }
+    else cell += ch;
+  }
+  row.push(cell); rows.push(row);
+  return rows.filter(function (r) { return r.some(function (c) { return c.trim(); }); });
+}
+function addRows(g, rows) {
+  if (!rows.length) return;
+  var cols = PARAM_COLS, start = 0;
+  var head = rows[0].map(function (c) { return c.trim().toLowerCase(); });
+  if (head.indexOf("name") > -1 && (head.indexOf("base") > -1 || head.indexOf("description") > -1)) { cols = head; start = 1; }
+  var added = 0;
+  rows.slice(start).forEach(function (r) {
+    var o = {};
+    cols.forEach(function (c, k) { if (PARAM_COLS.indexOf(c) > -1) o[c] = (r[k] || "").trim(); });
+    if (o.name === "p_example") return;
+    g.rows.push(o); added++;
+  });
+  render(); saveDraft();
+  notice("Added " + added + " parameter" + (added === 1 ? "" : "s") + ".", "ok");
+}
+var pasteTarget = null;
+document.getElementById("pasteCancel").onclick = function () { document.getElementById("pasteDlg").close(); };
+document.getElementById("pasteOk").onclick = function () {
+  document.getElementById("pasteDlg").close();
+  addRows(blocks[pasteTarget], parseDelimited(document.getElementById("pasteText").value));
+};
+
+function download(name, text, type) {
+  if (window.showSaveFilePicker) {
+    window.showSaveFilePicker({ suggestedName: name, types: [{ description: name, accept: { [type]: ["." + name.split(".").pop()] } }] })
+      .then(function (h) { return h.createWritable(); })
+      .then(function (w) { return w.write(text).then(function () { return w.close(); }); })
+      .then(function () { notice("Saved " + esc(name) + ".", "ok"); })
+      .catch(function (err) { if (err && err.name !== "AbortError") fallback(); });
+  } else fallback();
+  function fallback() {
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([text], { type: type + ";charset=utf-8" }));
+    a.download = name; document.body.appendChild(a); a.click(); a.remove();
+    notice("Downloaded " + esc(name) + ". Move it into the project folder" + (name === "parameters.csv" ? " as inputs/parameters.csv." : "."), "ok");
+  }
+}
+document.getElementById("exportSpec").onclick = function () {
+  var missing = blocks.filter(function (b) { return (b.kind === "row" || b.kind === "lineopts") && b.required && !isFilled(b); }).length;
+  if (missing) notice(missing + " required field" + (missing === 1 ? " is" : "s are") + " still empty. You can still export; Claude will list them at Stage 0.", "warn", true);
+  download("model_spec.md", exportSpec(blocks), "text/markdown");
+};
+document.getElementById("exportCsv").onclick = function () {
+  var g = blocks.filter(function (b) { return b.kind === "grid"; })[0];
+  if (!g || !g.rows.some(function (r) { return (r.name || "").trim(); })) { notice("The parameter table is empty.", "warn"); return; }
+  download("parameters.csv", exportCsv(blocks), "text/csv");
+};
+document.getElementById("copySpec").onclick = function () {
+  navigator.clipboard.writeText(exportSpec(blocks)).then(function () { notice("Spec copied as markdown.", "ok"); },
+    function () { notice("Copy was blocked by the browser. Use Export instead.", "warn"); });
+};
+document.getElementById("openSpec").onchange = function (e) {
+  var f = e.target.files[0]; if (!f) return;
+  var rd = new FileReader();
+  rd.onload = function () {
+    blocks = parseTemplate(TEMPLATE);
+    loadSpec(rd.result, blocks);
+    render(); saveDraft();
+    notice("Loaded " + esc(f.name) + ". Lines that are not part of the template (for example extra notes you added by hand) are not shown; keep a copy of the original if you need them.", "info", true);
+    e.target.value = "";
+  };
+  rd.readAsText(f);
+};
+
+// ---- Draft (per browser, optional) -------------------------------------------------
+
+function snapshot() {
+  return blocks.map(function (b) {
+    return { v: b.value, o: b.opts && b.opts.map(function (o) { return [o.checked, o.vals]; }), r: b.rows };
+  });
+}
+function restore(snap) {
+  if (!snap || snap.length !== blocks.length) return false;
+  snap.forEach(function (s, i) {
+    var b = blocks[i];
+    if (s.v !== undefined && "value" in b) b.value = s.v;
+    if (s.o && b.opts && s.o.length === b.opts.length) s.o.forEach(function (x, k) { b.opts[k].checked = x[0]; b.opts[k].vals = x[1] || []; });
+    if (s.r && b.kind === "grid") b.rows = s.r;
+  });
+  return true;
+}
+var saveTimer = null;
+function saveDraft() {
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(function () { try { localStorage.setItem(DRAFT_KEY, JSON.stringify(snapshot())); } catch (e) {} }, 300);
+}
+function startFresh() {
+  try { localStorage.removeItem(DRAFT_KEY); } catch (e) {}
+  blocks = parseTemplate(TEMPLATE); render(); document.getElementById("notices").innerHTML = "";
+}
+
+// ---- Self-test (open with ?selftest) ---------------------------------------------
+
+function selfTest() {
+  var results = [];
+  function check(name, ok) { results.push({ name: name, pass: !!ok }); }
+  var norm = function (s) { return s.replace(/\r\n/g, "\n").replace(/\s+$/, "") + "\n"; };
+  var b0 = parseTemplate(TEMPLATE);
+  check("Blank form exports the template unchanged", norm(exportSpec(b0)) === norm(TEMPLATE));
+  var b1 = parseTemplate(TEMPLATE);
+  var rows = b1.filter(function (b) { return b.kind === "row"; });
+  var txt = rows.filter(function (b) { return b.slot === "text"; });
+  var opt = rows.filter(function (b) { return b.slot === "options"; });
+  txt.forEach(function (b, i) { b.value = "Value " + i + (i === 0 ? " with | pipe" : ""); });
+  opt.forEach(function (b) { b.opts[b.opts.length - 1].checked = true; b.opts[b.opts.length - 1].vals = ["filled"]; });
+  b1.filter(function (b) { return b.kind === "lineopts"; }).forEach(function (b) { b.opts[0].checked = true; });
+  b1.filter(function (b) { return b.kind === "lineblank"; }).forEach(function (b) { b.value = "greyscale"; });
+  var g = b1.filter(function (b) { return b.kind === "grid"; })[0];
+  if (g) g.rows = [{ name: "p_ws", description: "Annual probability, Well to Sick", base: "0.1", low: "0.08", high: "0.12", distribution: "beta", input_type: "probability (1 yr)", source: "Smith 2024", notes: "" }];
+  var notes = b1.filter(function (b) { return b.kind === "notes"; })[0];
+  if (notes) notes.value = "Reuse the survival curves in inputs/raw.";
+  var out1 = exportSpec(b1);
+  var b2 = parseTemplate(TEMPLATE); loadSpec(out1, b2);
+  var out2 = exportSpec(b2);
+  check("Filled spec survives export, load and export again", out1 === out2);
+  check("Ticked options export as [x]", (out1.match(/\[x\]/g) || []).length >= opt.length);
+  check("Blanks in options are filled", out1.indexOf("filled") > -1);
+  check("Pipes in answers are escaped", out1.indexOf("with \\| pipe") > -1);
+  check("Parameter row replaces the example row", out1.indexOf("| p_ws |") > -1 && out1.indexOf("p_example") === -1);
+  check("Notes are kept", out1.indexOf("Reuse the survival curves") > -1);
+  check("parameters.csv header matches the scaffold", exportCsv(b1).split("\n")[0] === PARAM_COLS.join(","));
+  check("Every required field is recognised", rows.filter(function (b) { return b.required; }).length > 10);
+  var pass = results.every(function (r) { return r.pass; });
+  window.__selftest = { pass: pass, results: results };
+  var box = document.createElement("div"); box.id = "selftest";
+  box.className = "notice " + (pass ? "ok" : "warn");
+  box.innerHTML = "<strong>Self-test " + (pass ? "passed" : "FAILED") + "</strong><br>" + results.map(function (r) { return (r.pass ? "✓ " : "✗ ") + esc(r.name); }).join("<br>");
+  document.body.appendChild(box);
+  document.title = "SELFTEST " + (pass ? "PASS" : "FAIL");
+}
+
+// ---- Start ---------------------------------------------------------------------
+
+renderIntro();
+var restored = false;
+try { restored = restore(JSON.parse(localStorage.getItem(DRAFT_KEY) || "null")); } catch (e) {}
+render();
+if (restored) {
+  notice('Restored your unsaved draft from this browser. <button class="small" id="fresh">Start a blank spec</button>', "info", true);
+  document.getElementById("fresh").onclick = startFresh;
+}
+if (/selftest/.test(location.search)) selfTest();
+</script>
+</body>
+</html>
