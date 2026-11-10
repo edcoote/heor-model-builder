@@ -35,6 +35,10 @@ SCRIPTS = {
         "params_df <- readr::read_csv(here::here(\"inputs\", \"parameters.csv\"),\n"
         "                             show_col_types = FALSE)\n"
         "params <- setNames(as.list(params_df$base), params_df$name)\n"
+        "\n"
+        "# ONS life table for background mortality (bundled with the skill)\n"
+        "lt_path <- here::here(\"inputs\", \"raw\", \"ons_life_tables_uk.csv\")\n"
+        "if (file.exists(lt_path)) life_table <- read_life_table(lt_path)\n"
     ),
     "02_model_structure.R": "# States, transitions and conversions (Stage 1)\n",
     "03_run_deterministic.R": "# Base case run and sanity tests (Stage 2)\n",
@@ -89,6 +93,13 @@ def main() -> None:
         if not dest.exists():
             shutil.copy(ASSETS / asset, dest)
             created.append(f"R/{asset}")
+
+    # Life table for background mortality: copied as raw data, never edited
+    for asset in ["ons_life_tables_uk.csv", "ons_life_tables_uk_source.md"]:
+        dest = root / "inputs" / "raw" / asset
+        if not dest.exists():
+            shutil.copy(ASSETS / asset, dest)
+            created.append(f"inputs/raw/{asset}")
 
     checklist = root / "log" / "review_checklist.md"
     if not checklist.exists():

@@ -19,7 +19,7 @@ Fill in every field marked **[R]** (required). Fields marked [O] are optional; l
 
 | Field | Entry |
 |---|---|
-| **[R]** Population (age at entry, sex mix, key characteristics) | |
+| **[R]** Population (age at entry, sex mix as % female, key characteristics; age and sex mix drive background mortality) | |
 | **[R]** Intervention | |
 | **[R]** Comparator(s) | |
 | **[R]** Setting / country | |
@@ -48,7 +48,7 @@ Fill in every field marked **[R]** (required). Fields marked [O] are optional; l
 | **[R]** Allowed transitions (list "from → to", or attach a diagram) | |
 | **[R]** Cycle length | [ ] 1 month [ ] 3 months [ ] 6 months [ ] 1 year [ ] Other: ______ |
 | [O] Half-cycle correction (default: life-table method, applied to costs and QALYs) | [ ] Life-table [ ] Simpson's 1/3 [ ] None (justify): ______ |
-| [O] Background mortality (default: ONS national life tables, age- and sex-specific) | |
+| [O] Background mortality (default for UK: ONS life tables bundled with the skill, age- and sex-specific; non-UK: attach a national life table) | |
 | [O] Tunnel states / time-dependent transitions | |
 | [O] Treatment effect waning | |
 

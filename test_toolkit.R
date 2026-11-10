@@ -75,4 +75,67 @@ check("all costs 0: total cost 0", all(run_toy(modifyList(p, list(c_well = 0, c_
 check("certain death in cycle 1: QALYs = half a cycle of Well",
       near(run_toy(modifyList(p, list(p_wd = 1, p_ws = 0, disc_qaly = 0)))$qaly[1], p$u_well / 2))
 
+cat("Background mortality from the bundled ONS life table\n")
+lt <- read_life_table(file.path(root, "assets", "ons_life_tables_uk.csv"))
+qx <- function(sex, age) lt$qx[lt$sex == sex & lt$age == age]
+ex <- function(sex, age) lt$ex[lt$sex == sex & lt$age == age]
+# Life years from per-cycle death probabilities, life-table half-cycle method
+ly_from_p <- function(p, c = 1) {
+  s <- c(1, cumprod(1 - p))
+  sum(half_cycle_lifetable(cbind(s, 1 - s))[, 1]) * c
+}
+check("table has ages 0 to 100 for both sexes",
+      all(table(lt$sex) == 101) && identical(range(lt$age), c(0L, 100L)))
+check("annual cycle from age 50 (men) reproduces qx at 50, 51, 52",
+      near(as.vector(background_mortality(lt, 50, 0, 3)),
+           c(qx("male", 50), qx("male", 51), qx("male", 52)), 1e-12))
+check("two 6-month cycles compound to the annual qx",
+      near(1 - prod(1 - background_mortality(lt, 50, 0, 2, 0.5)), qx("male", 50), 1e-12))
+check("50:50 cohort, first cycle: mean of male and female qx",
+      near(background_mortality(lt, 50, 0.5, 1)[1],
+           (qx("male", 50) + qx("female", 50)) / 2, 1e-12))
+mix <- suppressWarnings(background_mortality(lt, 50, 0.5, 60))
+men <- suppressWarnings(background_mortality(lt, 50, 0, 60))
+wom <- suppressWarnings(background_mortality(lt, 50, 1, 60))
+check("mixed cohort lies between women and men in every cycle",
+      all(mix >= wom - 1e-12 & mix <= men + 1e-12))
+check("mixed cohort drifts towards women's mortality as men die sooner",
+      (mix[40] - wom[40]) / (men[40] - wom[40]) < (mix[1] - wom[1]) / (men[1] - wom[1]))
+check("life expectancy at 50 (men) matches ONS ex within 0.05 years",
+      near(ly_from_p(men), ex("male", 50), 0.05))
+check("life expectancy at 50 (women) matches ONS ex within 0.05 years",
+      near(ly_from_p(wom), ex("female", 50), 0.05))
+check("monthly cycles give the same life expectancy as annual",
+      near(ly_from_p(suppressWarnings(background_mortality(lt, 50, 0.5, 720, 1/12)), 1/12),
+           ly_from_p(mix), 0.01))
+check("horizon past age 101 warns", inherits(tryCatch(background_mortality(lt, 50, 0.5, 60),
+                                                    warning = function(w) w), "warning"))
+check("combine_mortality: independent hazards, 0.1 and 0.2 -> 0.28",
+      near(combine_mortality(0.1, 0.2), 0.28))
+check("combine_mortality: max for an all-cause disease figure",
+      near(combine_mortality(c(0.1, 0.3), c(0.2, 0.2), "max"), c(0.2, 0.3)))
+check("combine_mortality: no disease deaths leaves background unchanged",
+      near(combine_mortality(men, 0), men))
+check("lt_life_years past the table end returns ONS ex",
+      near(lt_life_years(lt, 50, 0.3, 70),
+           0.3 * ex("female", 50) + 0.7 * ex("male", 50)))
+
+cat("Life-table test (methods checklist test 8)\n")
+# Toy model with the disease switched off and ONS background mortality in
+# place of the constant p_wd: Well -> Dead only, through a transition array.
+bg <- background_mortality(lt, 50, 0.5, 40)
+P_arr <- array(0, c(2, 2, 40))
+P_arr[1, 1, ] <- 1 - bg; P_arr[1, 2, ] <- bg; P_arr[2, 2, ] <- 1
+tr_bg <- matrix(0, 41, 2); tr_bg[1, ] <- c(1, 0)
+for (t in 1:40) tr_bg[t + 1, ] <- tr_bg[t, ] %*% P_arr[, , t]
+ly_bg <- sum(half_cycle_lifetable(tr_bg)[, 1])
+run_tests(
+  test_transition_matrix(P_arr),
+  test_trace_conserved(tr_bg),
+  test_life_expectancy(ly_bg, lt, 50, 0.5, 40)
+)
+n_pass <- n_pass + 3
+check("test_life_expectancy fails a model with constant 2% mortality",
+      !test_life_expectancy(ly_from_p(rep(0.02, 40)), lt, 50, 0.5, 40)$pass)
+
 cat("\nAll", n_pass, "checks passed.\n")

@@ -32,7 +32,7 @@ Sign-off: ________ Date: ________
 
 ### Rationality checks (do the results make sense?)
 - [ ] Look at the Markov trace plot. The curves have a sensible shape. No state increases when it must decrease.
-- [ ] Undiscounted life expectancy agrees with ONS life tables for the start age, after you remove the effect of the disease.
+- [ ] Undiscounted life expectancy agrees with ONS life tables for the start age, after you remove the effect of the disease. `test_life_expectancy()` checks this automatically; confirm that it ran and passed, and that the ONS release in `inputs/raw/ons_life_tables_uk_source.md` is the one you expect.
 - [ ] Total costs per patient are in a sensible range for this disease and setting.
 - [ ] The direction of the result agrees with your expectation. If the result is "dominant" or "dominated", find the cause.
 - [ ] Compare the results with a published model of the same disease. Explain large differences.

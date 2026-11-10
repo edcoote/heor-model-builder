@@ -32,9 +32,12 @@ SKILL.md                     Instructions that Claude follows
 assets/
   model_spec_template.md     The spec you fill in for each model
   utils_conversions.R        Rate/probability/HR/OR/RR conversions, discounting,
-                             half-cycle correction, PSA distribution fitting
+                             half-cycle correction, PSA distribution fitting,
+                             background mortality from life tables
   utils_outputs.R            Figure and table house style, standard plots
   utils_tests.R              Automatic sanity tests
+  ons_life_tables_uk.csv     ONS UK life tables by single year of age and sex
+  ons_life_tables_uk_source.md  Which ONS release the CSV comes from
 references/
   methods_checklist.md       Spec validation, reference case, conversions, PSA, BIA, DCEA
   output_standards.md        Figure and table rules
@@ -42,6 +45,7 @@ references/
   review_checklist.md        Human checks for each checkpoint
 scripts/
   scaffold.py                Makes a new project folder
+  prepare_ons.R              Rebuilds the ONS life table CSV from an ONS workbook
 tests/
   toy_markov.R               Small worked 3-state Markov model
   test_toolkit.R             Known-answer tests for the R helpers
@@ -61,6 +65,18 @@ python scripts/scaffold.py path/to/my-model --budget-impact --dcea
 
 The script does not overwrite files. You can run it again on a project to add missing folders.
 
+## Background mortality (ONS life tables)
+
+The skill ships ONS UK life tables in `assets/ons_life_tables_uk.csv`. The scaffold copies them into each project's `inputs/raw/`. UK models use them for background mortality by default. `assets/ons_life_tables_uk_source.md` records which ONS release they come from.
+
+To update for a new ONS release, download the UK life tables workbook from the ONS website. Then run the following from the repository root, and rerun the tests:
+
+```
+Rscript scripts/prepare_ons.R path/to/workbook.xlsx
+```
+
+The script reads both ONS formats: national life tables (3-year periods) and single-year life tables. It uses the latest period unless you name a sheet as a second argument. It needs the readxl package.
+
 ## Run the tests
 
 Do these from the repository root. You need R 4.1 or later.
@@ -74,9 +90,10 @@ Rscript tests/test_outputs.R
 
 ## Status
 
-- Version 0.1.
-- Tested: the R helpers (32 known-answer checks), the figure and table output, and the scaffold script.
-- Not tested yet: a full model built by Claude from a real spec. Do this before you use the skill for a submission.
+- Version 0.2: adds ONS life tables for background mortality, and fixes the repository layout to match SKILL.md.
+- Tested: the R helpers (50 known-answer checks, including background mortality against ONS life expectancy), and the figure and table output.
+- A demo model (the 3-state toy model) has been built by Claude through Checkpoint 2.
+- Not tested yet: the scaffold script's new step that copies the life table (it was written without Python available), and a full model built from a real spec. Do both before you use the skill for a submission.
 
 ## References
 

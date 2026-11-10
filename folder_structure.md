@@ -11,6 +11,8 @@
 ├── inputs/
 │   ├── parameters.csv       # every model number; single source of truth
 │   └── raw/                 # source data as received; never edited
+│       ├── ons_life_tables_uk.csv        # ONS life tables (copied from the skill)
+│       └── ons_life_tables_uk_source.md  # which ONS release it is
 ├── R/
 │   ├── 00_packages.R
 │   ├── 01_load_inputs.R

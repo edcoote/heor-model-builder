@@ -87,3 +87,16 @@ run_tests <- function(...) {
   }
   invisible(results)
 }
+
+# Methods checklist test 8: with the disease switched off (no transitions out
+# of the starting state other than background death, utility 1, no
+# discounting), model life years should match the life table. ly_model is the
+# undiscounted life years from that run. Tolerance allows for the half-cycle
+# method and ONS's own Lx approximation near age 100.
+test_life_expectancy <- function(ly_model, lt, age_start, prop_female,
+                                 horizon_years, tol = 0.1) {
+  ref <- lt_life_years(lt, age_start, prop_female, horizon_years)
+  test_result("Life years with disease off match life tables",
+              abs(ly_model - ref) < tol,
+              sprintf("Model %.2f vs life table %.2f years", ly_model, ref))
+}

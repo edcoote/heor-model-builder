@@ -17,6 +17,7 @@
 Check every **[R]** field in `model_spec.md` is filled. Then check for these common inconsistencies and raise them all in one message:
 
 - Horizon vs cycle length: a lifetime horizon needs enough cycles to run the cohort to (near) 100% dead, and age-dependent background mortality.
+- Background mortality: age at entry and sex mix are stated, because the life table needs them. For the UK, the bundled ONS table is used unless the spec says otherwise; give its period and publication date, and flag it if ONS published it more than two years ago. Constant background mortality over a long horizon is an inconsistency to raise.
 - Transition inputs: the form ticked in section 5 matches the `input_type` column; probabilities quoted over a period other than the cycle are flagged for conversion.
 - Absorbing states: at least one (normally death); no transitions out of it.
 - Perspective vs costs: societal perspective with only NHS costs, or NHS perspective with out-of-pocket costs.
@@ -35,7 +36,7 @@ Check every **[R]** field in `model_spec.md` is filled. Then check for these com
 | Outcome | QALYs from EQ-5D, UK value set (check NICE's current position on EQ-5D-5L valuation before using 5L data) |
 | Threshold | Take from the spec; if blank, ask, and state the current NICE position as checked at the time |
 | Prices | Latest NHS Reference Costs / National Cost Collection, PSSRU Unit Costs, BNF / eMIT |
-| Background mortality | ONS National Life Tables, age- and sex-specific |
+| Background mortality | ONS life tables, age- and sex-specific: the table bundled as `assets/ons_life_tables_uk.csv` (release in `assets/ons_life_tables_uk_source.md`); refresh with `scripts/prepare_ons.R` |
 
 Every default used goes in `log/run_log.md`.
 
@@ -51,11 +52,13 @@ Let `c` be the cycle length in years.
 | Odds ratio on `p0` | `odds1 = OR * p0 / (1 - p0)`; `p1 = odds1 / (1 + odds1)`; convert period afterwards if `p0` is not per-cycle |
 | Relative risk on `p0` | `p1 = RR * p0`; check `p1 <= 1`; if `p0` is large, convert to rates and apply as an approximate HR, and log it |
 | Parametric survival `S(t)` | `p(t) = 1 - S(t) / S(t - c)` (time-dependent; build a transition array) |
+| Life table `qx` by age and sex | `background_mortality(lt, age_start, prop_female, n_cycles, c)`: hazard `-log(1 - qx)` held constant within each year of age; cohort survival mixed by sex, so the female share rises as the cohort ages (time-dependent; build a transition array) |
 
 Cautions:
 - The rate–probability conversion is exact only when one event competes from a state. With several exits from one state, convert each to a rate, sum, and split the total probability in proportion to the rates; log it.
 - Apply ORs and RRs at the period they were estimated over, then convert to the cycle.
-- Combine disease-specific and background mortality as rates (sum, then convert), not by adding probabilities, and avoid double counting if the disease mortality source is all-cause.
+- Combine disease-specific and background mortality as rates (sum, then convert), not by adding probabilities, and avoid double counting if the disease mortality source is all-cause. `combine_mortality(p_bg, p_disease, "independent")` sums the hazards, for excess or disease-specific mortality. `combine_mortality(..., "max")` takes the larger of the two, for an all-cause disease figure, so a state never has lower mortality than the general population.
+- With a life table, the exits from a state change every cycle. Build the background-death column per cycle, then take the other exits from what remains: for example, Well → Sick = `p_ws * (1 - p_death)` when the source for `p_ws` is conditional on surviving. Log the choice.
 - Never apply ORs or RRs to rates.
 
 ## 4. Half-cycle correction and discounting
@@ -91,7 +94,7 @@ Rules: use `set.seed()` from the spec; store every PSA draw in `outputs/results/
 5. Setting discount rates to 0 reproduces the undiscounted totals.
 6. Raising a cost parameter never lowers total cost in the arm that uses it.
 7. No utility above 1 in base case or PSA draws.
-8. Undiscounted life years are plausible against life tables for the starting age.
+8. Undiscounted life years are plausible against life tables for the starting age. `test_life_expectancy()` checks this: with the disease switched off, model life years match the table (from `lx`, or `ex` when the horizon reaches the end of the table) to within 0.1 years.
 9. PSA mean costs and QALYs are within about 5% of the deterministic values; if not, report it and name the likely non-linearity.
 
 ## 7. Budget impact module

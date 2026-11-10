@@ -26,19 +26,20 @@ Automatic tests find code errors; they cannot tell whether the model is right. S
    - internal inconsistencies (e.g. lifetime horizon with a 1-year cycle and no age-dependent mortality; probabilities given where rates are needed),
    - the defaults you propose for anything optional left blank, labelled as defaults.
    Never fill a required field silently. Never drip-feed questions across several turns.
+4. **Background mortality.** For a UK setting with background mortality left blank, the default is the ONS life table bundled with the skill (`assets/ons_life_tables_uk.csv`; its period and publication date are in `assets/ons_life_tables_uk_source.md`). State that period and date in the Stage 0 message, and flag it if ONS published it more than two years before today, so the user can refresh it with `scripts/prepare_ons.R`. Age at entry and sex mix become required. For a non-UK setting, ask for a national life table in the same format. Only use constant background mortality if the user asks for it, and log it as a deviation.
 
 ### Stage 1 — Scaffold and structure → CHECKPOINT 1
 
-1. Create the project with `python scripts/scaffold.py <project_dir>` (it is safe to rerun; it never overwrites existing files). Folder layout is in `references/folder_structure.md`.
+1. Create the project with `python scripts/scaffold.py <project_dir>` (it is safe to rerun; it never overwrites existing files). Folder layout is in `references/folder_structure.md`. The scaffold copies the ONS life table into `inputs/raw/`. If Python is not available, create the same layout and starter files by hand, following `scripts/scaffold.py` exactly, never overwriting a file, and log that the script was not run.
 2. Write `inputs/parameters.csv` from the spec. It is the single source of truth for every number in the model: no hard-coded values in R scripts.
-3. Write `R/02_model_structure.R` (states, transitions, conversion of ORs/RRs/hazards/rates to per-cycle probabilities as set out in `references/methods_checklist.md`). Use the functions in `R/utils_conversions.R` for every conversion, discount factor, half-cycle correction and PSA distribution fit, rather than writing the formulas again.
+3. Write `R/02_model_structure.R` (states, transitions, conversion of ORs/RRs/hazards/rates to per-cycle probabilities as set out in `references/methods_checklist.md`). Use the functions in `R/utils_conversions.R` for every conversion, discount factor, half-cycle correction and PSA distribution fit, rather than writing the formulas again. For background mortality, read the life table with `read_life_table()`, get per-cycle probabilities with `background_mortality()`, and combine them with disease mortality using `combine_mortality()`. Because these probabilities change with age, the transition matrix becomes an array (states × states × cycles).
 4. Produce the model diagram (`outputs/figures/fig_model_structure`) and the inputs table (`outputs/tables/tab_inputs`).
 5. **Checkpoint 1:** show the diagram, the inputs table, and a one-paragraph summary of structural assumptions. Wait for approval.
 
 ### Stage 2 — Deterministic base case → CHECKPOINT 2
 
 1. Write `R/03_run_deterministic.R`. Save results as `.rds` in `outputs/results/`.
-2. Run every applicable test in `R/utils_tests.R`. All must pass before you report results; if one fails, fix the cause, don't loosen the test.
+2. Run every applicable test in `R/utils_tests.R`. All must pass before you report results; if one fails, fix the cause, don't loosen the test. When the model uses a life table, include `test_life_expectancy()`: run the model with the disease switched off, utility 1 and no discounting, and compare its life years with the table.
 3. Write `R/03b_hand_check.R`, which prints cycles 1 and 2 of the trace, costs and QALYs for one arm in a plain table, so the user can rebuild them by hand in Excel.
 4. **Checkpoint 2:** show the base case results table, the Markov trace (if Markov), the test summary and the hand-check table. Wait for approval.
 
@@ -76,4 +77,5 @@ Automatic tests find code errors; they cannot tell whether the model is right. S
 - `assets/model_spec_template.md` — the fill-out spec.
 - `references/review_checklist.md` — the human checks for each checkpoint: face validity, rationality checks and known-answer tests. Copied into each project's `log/` folder.
 - `assets/utils_conversions.R`, `assets/utils_outputs.R`, `assets/utils_tests.R` — copied into each project's `R/` folder by the scaffold script.
+- `assets/ons_life_tables_uk.csv` and `assets/ons_life_tables_uk_source.md` — ONS UK life tables by single year of age and sex, with their release details. Copied into each project's `inputs/raw/` folder by the scaffold script. `scripts/prepare_ons.R` rebuilds them from a new ONS workbook.
 - `tests/toy_markov.R` — a small, worked 3-state Markov model. Use it as the pattern for `run_model()` (named parameter list in, total costs and QALYs per strategy out), because the tests in `utils_tests.R` expect that shape.
