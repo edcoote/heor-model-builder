@@ -1,0 +1,17 @@
+# R
+.Rhistory
+.RData
+.Rproj.user/
+*.Rproj.user
+
+# OS and editors
+.DS_Store
+Thumbs.db
+.vscode/
+
+# Python
+__pycache__/
+*.pyc
+
+# Build output
+*.skill
