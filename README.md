@@ -8,6 +8,49 @@ The skill has three aims:
 2. No lost files. Each project uses the same folders and relative paths.
 3. Manuscript-ready outputs. All figures and tables use one house style.
 
+## Quick start: build a new model
+
+### One-time setup
+
+1. Install the skill in Claude: **Settings → Capabilities → Skills**, then upload `heor-model-builder.skill`. See [Use the skill in Claude](#use-the-skill-in-claude).
+2. Install R 4.1 or later. Add its `bin` folder to your PATH (for example `C:\Program Files\R\R-4.6.1\bin`).
+3. Optional: install Python 3 and tick "Add to PATH". The skill then makes the project folders with `scripts/scaffold.py`. Without Python, Claude makes the same folders by hand.
+
+### Each new model
+
+1. **Make a folder for the model.** Use lowercase and hyphens, for example `Documents/HEOR/ckd-sglt2-cua`.
+2. **Start a new Claude Code session in that folder.** Choose the folder when you open the session. Without a folder, the work goes into a temporary folder that is deleted with the session.
+3. **Get the spec template.** Type:
+
+   ```
+   /anthropic-skills:heor-model-builder new model
+   ```
+
+   Claude puts a blank `model_spec.md` in the folder. If you already have a filled-in spec, save it in the folder and go to step 5.
+4. **Fill in the spec.** Fill in every field marked **[R]**. Tick options by changing `[ ]` to `[x]`. For UK models, give the age at entry and the % female, because the ONS life tables need them. Leave background mortality blank to use the bundled ONS tables.
+5. **Tell Claude the spec is ready.** Type `spec is done`. Put any data files (for example a parameters spreadsheet) in the folder first, and name them in your message.
+6. **Answer the Stage 0 message once.** Claude lists all the gaps and proposed defaults in one message. Reply to all of them in one message, for example "accept all defaults, but use a threshold of £30,000".
+7. **Review and sign off each checkpoint.** Use the matching section of `log/review_checklist.md`. Then reply `signed off, continue`.
+
+| Checkpoint | Claude shows | You check |
+|---|---|---|
+| 1. Structure | Model diagram, inputs table | Input values against their sources, units, face validity |
+| 2. Base case | Results table, Markov trace, test summary, hand-check table | Rebuild cycles 1–2 in Excel; results make sense |
+| 3. Uncertainty | CE plane, CEAC, tornado, scenarios | Distributions, directions, PSA close to deterministic |
+| 4. Manuscript | Tables in Word, figure legends, methods draft, CHEERS 2022 map | Tables agree with results |
+
+### Coming back later
+
+Open a new session in the same folder and type:
+
+```
+/anthropic-skills:heor-model-builder resume
+```
+
+Claude reads `model_spec.md` and `log/run_log.md` and tells you which stage the model is at.
+
+Tip: keep each model folder in git or OneDrive, so every version is saved.
+
 ## How it works
 
 1. You fill in `assets/model_spec_template.md` for a new model.
