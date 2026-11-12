@@ -3,104 +3,182 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Model spec form</title>
+<title>Model spec builder</title>
 <!--
-  heor-model-builder: model spec form.
+  heor-model-builder: model spec builder.
   Open this file in a browser (double-click). It works offline and sends
-  nothing anywhere. Fill in the spec, then export model_spec.md (and
+  nothing anywhere. Step through the sections, draw the model in section 4,
+  attach costs and outcomes in section 6, then export model_spec.md (and
   parameters.csv) into the project folder.
 
   The form is built from the template embedded below, so its fields always
   match assets/model_spec_template.md. After editing the template, run
   `Rscript scripts/build_spec_form.R` to re-embed it. Open the file with
   ?selftest on the end of the address to run the round-trip self-test.
+
+  The drawn model is saved inside model_spec.md as one comment line,
+  starting "heor-form-data", so opening the spec again restores it.
 -->
 <style>
-:root{--ink:#1d2433;--muted:#5b6475;--line:#e3e6ec;--bg:#fff;--soft:#f5f7fa;--accent:#0072B2;--warn:#b54708;--warn-bg:#fff6ed;--ok:#067647;--req:#d92d20}
+:root{--ink:#1d2433;--muted:#5b6475;--line:#e3e6ec;--bg:#fff;--soft:#f5f7fa;--accent:#0072B2;--accent-soft:#e8f1f9;--warn:#b54708;--warn-bg:#fff6ed;--ok:#067647;--ok-bg:#ecfdf3;--req:#d92d20}
 *{box-sizing:border-box}
 body{margin:0;font-family:Arial,Helvetica,sans-serif;color:var(--ink);background:var(--soft);font-size:15px;line-height:1.45}
-header.bar{position:sticky;top:0;z-index:5;background:var(--bg);border-bottom:1px solid var(--line);padding:10px 20px;display:flex;flex-wrap:wrap;gap:10px;align-items:center}
-header.bar h1{font-size:17px;margin:0 12px 0 0}
+header.bar{position:sticky;top:0;z-index:10;background:var(--bg);border-bottom:1px solid var(--line);padding:10px 22px;display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.brand{font-weight:bold;font-size:17px;margin-right:6px}
 .progress{font-size:13px;color:var(--muted);margin-right:auto;display:flex;align-items:center;gap:8px}
 .progress .track{width:140px;height:8px;background:var(--line);border-radius:4px;overflow:hidden}
-.progress .fill{height:100%;background:var(--ok);width:0}
-button,.btn{font:inherit;font-size:14px;padding:7px 12px;border-radius:7px;border:1px solid var(--line);background:var(--bg);color:var(--ink);cursor:pointer;white-space:nowrap}
+.progress .fill{display:block;height:100%;background:var(--ok);width:0;transition:width .2s}
+button,.btn{font:inherit;font-size:14px;padding:7px 12px;border-radius:8px;border:1px solid #cfd4dc;background:var(--bg);color:var(--ink);cursor:pointer;white-space:nowrap;display:inline-flex;align-items:center;gap:6px}
 button:hover,.btn:hover{border-color:var(--accent);color:var(--accent)}
 button.primary{background:var(--accent);border-color:var(--accent);color:#fff}
 button.primary:hover{background:#005a8c;color:#fff}
-button.small{font-size:13px;padding:4px 9px}
+button.danger:hover{border-color:var(--req);color:var(--req)}
+button.small,.btn.small{font-size:13px;padding:4px 9px;border-radius:7px}
 button.link{border:0;background:none;color:var(--accent);padding:2px 4px}
-.layout{display:flex;max-width:1250px;margin:0 auto}
-nav.side{position:sticky;top:58px;align-self:flex-start;width:220px;padding:18px 10px;max-height:calc(100vh - 60px);overflow-y:auto}
-nav.side a{display:flex;justify-content:space-between;gap:6px;padding:6px 8px;border-radius:6px;color:var(--ink);text-decoration:none;font-size:14px}
-nav.side a:hover{background:#e6eef6;color:var(--accent)}
-nav.side .count{font-size:12px;color:var(--muted)}
-nav.side .count.done{color:var(--ok)}
-main{flex:1;min-width:0;padding:18px 20px 80px}
-.intro{background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:14px 18px;margin-bottom:16px;font-size:14px;color:var(--muted)}
-.notice{border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:14px}
+button.on{background:var(--accent-soft);border-color:var(--accent);color:#004f7c}
+button:disabled{opacity:.45;cursor:default;border-color:#cfd4dc;color:var(--muted)}
+nav.steps{position:sticky;top:55px;z-index:9;background:var(--bg);border-bottom:1px solid var(--line);padding:8px 22px;display:flex;gap:6px;overflow-x:auto}
+nav.steps a{display:flex;align-items:center;gap:7px;padding:6px 11px 6px 7px;border-radius:20px;color:var(--ink);text-decoration:none;font-size:13.5px;white-space:nowrap;border:1px solid transparent;cursor:pointer}
+nav.steps a .n{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:var(--line);font-size:12px;font-weight:bold}
+nav.steps a.done .n{background:var(--ok);color:#fff}
+nav.steps a.cur{border-color:var(--accent);background:var(--accent-soft);color:#004f7c}
+nav.steps a.cur .n{background:var(--accent);color:#fff}
+nav.steps a:hover{background:var(--soft)}
+main{max-width:1180px;margin:0 auto;padding:20px 22px 40px}
+.notice{border-radius:9px;padding:10px 14px;margin-bottom:14px;font-size:14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 .notice.info{background:#eef4fb;border:1px solid #c7dbef}
 .notice.warn{background:var(--warn-bg);border:1px solid #f9dbaf;color:var(--warn)}
-.notice.ok{background:#ecfdf3;border:1px solid #abefc6;color:var(--ok)}
-section.card{background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:6px 18px 14px;margin-bottom:16px;scroll-margin-top:70px}
-section.card h2{font-size:18px;margin:12px 0 8px}
-.field{display:grid;grid-template-columns:minmax(200px,34%) 1fr;gap:14px;padding:10px 0 10px 10px;border-top:1px solid var(--line);border-left:3px solid transparent}
-.field:first-of-type{border-top:0}
+.notice.ok{background:var(--ok-bg);border:1px solid #abefc6;color:var(--ok)}
+.stage{background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:18px 22px 22px}
+.stage h2{font-size:21px;margin:2px 0 4px}
+.stage .lead{color:var(--muted);font-size:14px;margin:0 0 14px;max-width:820px}
+.stage h3{font-size:15.5px;margin:22px 0 8px}
+.field{display:grid;grid-template-columns:minmax(200px,32%) 1fr;gap:14px;padding:11px 0 11px 10px;border-top:1px solid var(--line);border-left:3px solid transparent}
+.field.first{border-top:0}
 .field.missing{border-left-color:var(--req)}
 .field .lab{font-size:14px}
-.badge{display:inline-block;font-size:11px;font-weight:bold;padding:1px 6px;border-radius:9px;margin-right:6px;vertical-align:1px}
+.badge{display:inline-block;font-size:11px;font-weight:bold;padding:1px 7px;border-radius:9px;margin-right:6px;vertical-align:1px}
 .badge.r{background:#fee4e2;color:var(--req)}
 .badge.o{background:var(--soft);color:var(--muted)}
+.badge.auto{background:var(--accent-soft);color:#004f7c}
 .hint{font-size:12.5px;color:var(--muted);margin-top:4px}
 .hint.uk{color:var(--warn)}
-textarea,input[type=text],input[type=search],select{font:inherit;font-size:14px;width:100%;padding:7px 9px;border:1px solid #cfd4dc;border-radius:7px;background:#fff;color:var(--ink)}
+textarea,input[type=text],input[type=number],select{font:inherit;font-size:14px;width:100%;padding:7px 9px;border:1px solid #cfd4dc;border-radius:7px;background:#fff;color:var(--ink)}
 textarea{resize:vertical;min-height:38px}
 textarea:focus,input:focus,select:focus{outline:2px solid #b3d4ef;border-color:var(--accent)}
+.readonly{background:var(--soft);border:1px dashed #cfd4dc;border-radius:7px;padding:7px 9px;font-size:14px;color:var(--ink);min-height:38px;white-space:pre-wrap}
 .opts{display:flex;flex-wrap:wrap;gap:8px}
 .opt{display:inline-flex;align-items:center;gap:6px;border:1px solid #cfd4dc;border-radius:18px;padding:5px 11px;background:#fff;font-size:14px;cursor:pointer}
-.opt.on{border-color:var(--accent);background:#eef4fb;color:#004f7c}
+.opt.on{border-color:var(--accent);background:var(--accent-soft);color:#004f7c}
 .opt input[type=checkbox]{margin:0;accent-color:var(--accent)}
-.opt input.blank{width:140px;padding:2px 6px;font-size:13px}
+.opt input.blank{width:130px;padding:2px 6px;font-size:13px}
 .muted{font-size:13px;color:var(--muted);margin:6px 0}
 .muted ul{margin:4px 0;padding-left:18px}
-.grid-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:8px;margin:8px 0}
+.stepnav{display:flex;justify-content:space-between;align-items:center;margin-top:16px;gap:10px}
+.stepnav .info{font-size:13px;color:var(--muted)}
+/* model type cards */
+.types{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px;margin:6px 0 4px}
+.type{border:1.5px solid var(--line);border-radius:11px;padding:12px;background:#fff;cursor:pointer;text-align:left;display:block;white-space:normal}
+.type:hover{border-color:var(--accent)}
+.type.on{border-color:var(--accent);background:var(--accent-soft)}
+.type svg{display:block;margin-bottom:8px}
+.type b{display:block;font-size:14px}
+.type span{display:block;font-size:12px;color:var(--muted);margin-top:2px}
+/* builder */
+.builder{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:14px;align-items:start}
+.canvas-wrap{border:1px solid var(--line);border-radius:11px;overflow:hidden;background:#fbfcfd}
+.toolbar{display:flex;flex-wrap:wrap;gap:6px;padding:8px;border-bottom:1px solid var(--line);background:#fff;align-items:center}
+.toolbar .sep{width:1px;height:22px;background:var(--line);margin:0 4px}
+.toolbar .tip{font-size:12.5px;color:var(--muted);margin-left:auto}
+.canvas{position:relative;background-image:radial-gradient(#d9dee6 1px,transparent 1px);background-size:18px 18px;overflow:auto}
+.canvas svg{display:block;width:100%;height:auto;user-select:none;touch-action:none}
+.canvas.connecting{cursor:crosshair}
+.inspector{border:1px solid var(--line);border-radius:11px;background:#fff;padding:12px 14px;position:sticky;top:120px;max-height:calc(100vh - 140px);overflow-y:auto}
+.inspector h4{margin:0 0 8px;font-size:15px}
+.inspector .row{margin:9px 0}
+.inspector label.l{display:block;font-size:12.5px;color:var(--muted);margin-bottom:3px}
+.inspector .pair{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.inspector .item{border:1px solid var(--line);border-radius:8px;padding:8px;margin:6px 0;background:var(--soft)}
+.inspector .item .x{float:right}
+.inspector .empty{color:var(--muted);font-size:13.5px}
+.check{display:flex;gap:7px;align-items:center;font-size:14px;cursor:pointer}
+.check input{accent-color:var(--accent)}
+.issues{margin:8px 0 0;padding:0;list-style:none;font-size:13px}
+.issues li{padding:3px 0 3px 18px;position:relative;color:var(--warn)}
+.issues li:before{content:'!';position:absolute;left:4px;font-weight:bold}
+.issues li.ok{color:var(--ok)}
+.issues li.ok:before{content:'\2713';left:2px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.chip{display:inline-flex;align-items:center;gap:5px;border:1px solid #cfd4dc;border-radius:16px;padding:3px 4px 3px 10px;background:#fff;font-size:13.5px}
+.chip.ref{border-color:var(--accent);background:var(--accent-soft)}
+.chip button{border:0;padding:1px 6px;font-size:12px;background:none}
+/* params grid */
+.grid-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:9px;margin:8px 0}
 table.grid{border-collapse:collapse;font-size:13px;min-width:1150px;width:100%}
 table.grid th{background:var(--soft);text-align:left;padding:6px;border-bottom:1px solid var(--line);font-weight:bold;white-space:nowrap}
-table.grid td{padding:3px;border-bottom:1px solid var(--line)}
+table.grid td{padding:3px;border-bottom:1px solid var(--line);vertical-align:middle}
+table.grid tr.group td{background:#fafbfc;font-weight:bold;font-size:12.5px;color:var(--muted);padding:6px}
 table.grid input,table.grid select{padding:4px 6px;font-size:13px;border-radius:5px}
+table.grid input[readonly]{background:var(--soft);color:#344054;border-style:dashed}
 table.grid td.bad input{border-color:var(--req);background:#fff5f5}
 .grid-tools{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
 .empty-grid{padding:14px;color:var(--muted);font-size:13px}
-dialog{border:1px solid var(--line);border-radius:10px;padding:18px;max-width:720px;width:92vw}
+/* analyses cards */
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:12px}
+.acard{border:1.5px solid var(--line);border-radius:11px;padding:12px 14px;background:#fff}
+.acard.on{border-color:#9cc3e3}
+.acard .top{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.acard .top b{font-size:14.5px}
+.acard .desc{font-size:12.5px;color:var(--muted);margin:3px 0 8px}
+.acard .body{margin-top:6px}
+.acard.off .body{display:none}
+.switch{position:relative;width:38px;height:22px;flex:none}
+.switch input{opacity:0;width:0;height:0}
+.switch span{position:absolute;inset:0;background:#cfd4dc;border-radius:12px;transition:.15s;cursor:pointer}
+.switch span:before{content:'';position:absolute;width:16px;height:16px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.15s}
+.switch input:checked+span{background:var(--accent)}
+.switch input:checked+span:before{transform:translateX(16px)}
+.seg{display:inline-flex;border:1px solid #cfd4dc;border-radius:9px;overflow:hidden}
+.seg button{border:0;border-radius:0;border-right:1px solid #cfd4dc}
+.seg button:last-child{border-right:0}
+.plist{max-height:180px;overflow-y:auto;border:1px solid var(--line);border-radius:7px;padding:6px 8px;margin-top:6px}
+.plist .check{font-size:13px;margin:3px 0}
+table.mini{border-collapse:collapse;width:100%;font-size:13px;margin-top:6px}
+table.mini td{padding:2px}
+pre.md{background:var(--soft);border:1px solid var(--line);border-radius:9px;padding:12px;max-height:420px;overflow:auto;font-size:12.5px;white-space:pre-wrap}
+.summary{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;margin:8px 0 14px}
+.summary div{border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:var(--soft)}
+.summary b{display:block;font-size:20px;color:var(--accent)}
+.summary span{font-size:12.5px;color:var(--muted)}
+.missing-list button{margin:3px 6px 3px 0}
+dialog{border:1px solid var(--line);border-radius:12px;padding:18px;max-width:720px;width:92vw}
 dialog::backdrop{background:rgba(20,25,35,.35)}
 dialog textarea{min-height:200px;font-family:Consolas,monospace;font-size:12.5px}
 dialog .row{display:flex;gap:8px;justify-content:flex-end;margin-top:10px}
-#selftest{position:fixed;bottom:12px;right:12px;z-index:9;max-width:420px}
-@media (max-width:860px){nav.side{display:none}.field{grid-template-columns:1fr}header.bar h1{width:100%}}
-@media print{header.bar,nav.side,.grid-tools,button{display:none}body{background:#fff}section.card{border:0;break-inside:avoid-page}}
+#selftest{position:fixed;bottom:12px;right:12px;z-index:20;max-width:440px;display:block}
+@media (max-width:1060px){.builder{grid-template-columns:1fr}.inspector{position:static;max-height:none}}
+@media (max-width:760px){.field{grid-template-columns:1fr}}
+@media print{header.bar,nav.steps,.stepnav,.toolbar,.grid-tools,button{display:none}body{background:#fff}.stage{border:0}}
 </style>
 </head>
 <body>
 <header class="bar">
-  <h1>Model spec</h1>
+  <span class="brand">Model spec builder</span>
   <div class="progress"><span class="track"><span class="fill" id="pfill"></span></span><span id="ptext"></span></div>
   <label class="btn" title="Open an existing model_spec.md to edit it">Open model_spec.md<input type="file" id="openSpec" accept=".md,.txt,text/markdown,text/plain" hidden></label>
-  <button id="exportCsv" title="Save the parameter table as inputs/parameters.csv">Export parameters.csv</button>
-  <button id="copySpec" title="Copy the spec as markdown">Copy</button>
+  <button class="danger" id="clearBtn" title="Remove every answer and start a blank spec">Clear form</button>
   <button class="primary" id="exportSpec" title="Save model_spec.md into the project folder">Export model_spec.md</button>
 </header>
-<div class="layout">
-  <nav class="side" id="nav"></nav>
-  <main id="main">
-    <div id="notices"></div>
-    <div class="intro" id="intro"></div>
-    <div id="form"></div>
-  </main>
-</div>
+<nav class="steps" id="steps"></nav>
+<main>
+  <div id="notices"></div>
+  <div class="stage" id="stage"></div>
+  <div class="stepnav"><button id="prevBtn">&larr; Back</button><span class="info" id="stepInfo"></span><button class="primary" id="nextBtn">Next &rarr;</button></div>
+</main>
 
 <dialog id="pasteDlg">
   <h3 style="margin-top:0">Paste parameters</h3>
-  <p class="muted">Paste rows copied from Excel, or CSV text. A header row with the column names is optional: without one, columns are read in the template order (name, description, base, low, high, distribution, param_1, param_2, input_type, source, notes). Pasted rows are added to the table.</p>
+  <p class="muted">Paste rows copied from Excel, or CSV text. A header row with the column names is optional: without one, columns are read in the template order (name, description, base, low, high, distribution, param_1, param_2, input_type, source, notes). Rows whose name matches a parameter from the diagram fill in that row.</p>
   <textarea id="pasteText" placeholder="name&#9;description&#9;base&#9;low&#9;high&#9;..."></textarea>
   <div class="row"><button id="pasteCancel">Cancel</button><button class="primary" id="pasteOk">Add rows</button></div>
 </dialog>
@@ -193,6 +271,8 @@ Fill one row per parameter, or attach a CSV with these columns. This becomes `in
 | [O] PSA iterations (default 5,000) and seed (default 2026) | |
 | [O] Parameters for DSA (default: all with low/high) | |
 | [O] Scenario analyses (list each, one line each) | |
+| [O] Threshold analysis (parameter to vary; target, e.g. ICER = £25,000) | |
+| [O] EVPPI parameter groups (one group per line) | |
 | [O] Structural uncertainty to test | |
 
 ## 8. Optional modules
@@ -241,17 +321,23 @@ Anything else: data files to read, existing code to reuse, decisions already mad
 <script>
 "use strict";
 var TEMPLATE = document.getElementById("spec-template").textContent.replace(/\r\n/g, "\n");
-var DRAFT_KEY = "heor-spec-form-draft-v1";
+var DRAFT_KEY = "heor-spec-form-draft-v2";
+var DATA_RE = /^<!-- heor-form-data (.*) -->\s*$/m;
 var PARAM_COLS = ["name","description","base","low","high","distribution","param_1","param_2","input_type","source","notes"];
 var DISTS = ["", "beta", "gamma", "lognormal", "normal", "dirichlet", "fixed"];
-var INPUT_TYPES = ["probability (1 yr)", "probability (period)", "rate", "HR", "OR", "RR", "cost", "utility", "disutility", "count"];
+var INPUT_TYPES = ["probability (1 yr)", "probability (period)", "rate", "HR", "OR", "RR", "cost", "utility", "disutility", "QALY", "survival curve", "count"];
+var COST_CATS = ["Drug acquisition", "Administration", "Monitoring", "Health-state management", "Hospitalisation", "Adverse events", "Procedure", "Social care", "Other"];
 var BLANK_RE = /_{3,}/g;
 var OPT_RE = /\[[ xX]\]/;
 // Tick boxes inside `code` (e.g. "Tick options with `[x]`") are not fields
 function hasOpts(l) { return OPT_RE.test(l.replace(/`[^`]*`/g, "")); }
 var UK_RE = /\b(uk|u\.k\.|united kingdom|england|scotland|wales|northern ireland|nhs)\b/i;
 
-// ---- Parsing ---------------------------------------------------------------
+// =========================================================================
+// Template engine: parse the template into blocks, export them back to
+// markdown, and load a filled spec into them. An untouched form exports the
+// template exactly.
+// =========================================================================
 
 function splitCells(line) {
   var s = line.trim().replace(/^\|/, "").replace(/\|$/, "");
@@ -267,9 +353,7 @@ function parseOptions(text) {
   var prefix = text.slice(0, i);
   var parts = text.slice(i).split(/(?=\[[ xX]\])/);
   var opts = parts.map(function (p) {
-    var checked = /^\[[xX]\]/.test(p);
-    var label = p.replace(/^\[[ xX]\]\s?/, "").replace(/\s+$/, "");
-    return { label: label, checked: checked };
+    return { label: p.replace(/^\[[ xX]\]\s?/, "").replace(/\s+$/, ""), checked: /^\[[xX]\]/.test(p) };
   });
   return { prefix: prefix, opts: opts };
 }
@@ -278,14 +362,11 @@ function labelRegex(tplLabel) {
   var esc = tplLabel.split(BLANK_RE).map(function (s) {
     return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/\s+/g, "\\s*");
   });
-  // Allow a note after a label that does not end in a blank, e.g.
-  // "Both *(threshold to confirm)*" still matches "Both"
+  // Allow a note after a label that does not end in a blank
   var tail = /_{3,}\s*$/.test(tplLabel) ? "" : "(?:\\s.*)?";
   return new RegExp("^" + esc.join("(.*?)") + tail + "$");
 }
 
-// Template -> blocks. Each block keeps the original text so an untouched
-// form exports the template exactly.
 function parseTemplate(text) {
   var lines = text.split("\n");
   var blocks = [], section = null, i = 0, prevText = "";
@@ -299,15 +380,14 @@ function parseTemplate(text) {
     if (/^\s*\|/.test(l)) {
       var cells = splitCells(l);
       if (cells.length > 2 && !isSep(l)) {
-        // Wide table = parameter grid: header, separator, example rows
         var j = i + 1, rows = [];
         while (j < lines.length && /^\s*\|/.test(lines[j])) { if (!isSep(lines[j])) rows.push(lines[j]); j++; }
         blocks.push({ kind: "grid", section: section, header: l, sep: lines[i + 1], tplRows: rows, cols: cells, rows: [] });
         i = j; continue;
       }
       if (cells.length === 2 && !isSep(l) && !/^(Field)$/.test(cells[0])) {
-        var b = { kind: "row", section: section, label: cells[0], tplCell: cells[1], key: normKey(section || "") + "::" + normKey(cells[0]),
-                  required: /\[R\]/.test(cells[0]) };
+        var b = { kind: "row", section: section, label: cells[0], tplCell: cells[1],
+                  key: normKey(section || "") + "::" + normKey(cells[0]), required: /\[R\]/.test(cells[0]) };
         if (OPT_RE.test(cells[1])) { b.slot = "options"; b.opts = parseOptions(cells[1]).opts.map(function (o) { return { label: o.label, checked: false, vals: [] }; }); }
         else { b.slot = "text"; b.value = ""; }
         blocks.push(b); prevText = l; i++; continue;
@@ -329,11 +409,11 @@ function parseTemplate(text) {
       blocks.push({ kind: "lineblank", section: section, text: l, before: l.slice(0, k), after: l.slice(k + m.length), blank: m, value: "" });
       prevText = l; i++; continue;
     }
+    BLANK_RE.lastIndex = 0;
     blocks.push({ kind: "static", section: section, text: l });
     if (l.trim()) prevText = l;
     i++;
   }
-  // Notes: free text after the last section's first paragraph
   var lastHead = -1;
   blocks.forEach(function (b, idx) { if (b.kind === "heading") lastHead = idx; });
   if (lastHead > -1 && /notes/i.test(blocks[lastHead].section)) {
@@ -345,9 +425,7 @@ function parseTemplate(text) {
   return blocks;
 }
 
-// ---- Export ------------------------------------------------------------------
-
-function cellSafe(v) { return v.replace(/\r?\n+/g, "; ").replace(/\|/g, "\\|").trim(); }
+function cellSafe(v) { return String(v).replace(/\r?\n+/g, "; ").replace(/\|/g, "\\|").trim(); }
 function fillBlanks(label, vals) {
   var n = 0;
   return label.replace(BLANK_RE, function (m) { var v = (vals[n++] || "").trim(); return v ? cellSafe(v) : m; });
@@ -355,7 +433,8 @@ function fillBlanks(label, vals) {
 function optsText(prefix, opts) {
   return prefix + opts.map(function (o) { return "[" + (o.checked ? "x" : " ") + "] " + fillBlanks(o.label, o.vals); }).join(" ");
 }
-function exportSpec(blocks) {
+// model: the drawn model, saved as one comment line so it can be reopened
+function exportSpec(blocks, model) {
   var out = [];
   blocks.forEach(function (b) {
     switch (b.kind) {
@@ -369,16 +448,18 @@ function exportSpec(blocks) {
       case "grid":
         out.push(b.header); out.push(b.sep);
         var rows = b.rows.filter(function (r) { return PARAM_COLS.some(function (c) { return (r[c] || "").trim(); }); });
-        if (!rows.length) { b.tplRows.forEach(function (r) { out.push(r); }); }
-        else rows.forEach(function (r) {
-          out.push("| " + b.cols.map(function (c) { return cellSafe(r[c] || ""); }).join(" | ") + " |");
-        });
+        if (!rows.length) b.tplRows.forEach(function (r) { out.push(r); });
+        else rows.forEach(function (r) { out.push("| " + b.cols.map(function (c) { return cellSafe(r[c] || ""); }).join(" | ") + " |"); });
         break;
-      // A blank line first, so the notes stay a separate paragraph
       case "notes": if (b.value.trim()) { out.push(""); out.push(b.value.trim()); } break;
     }
   });
-  return out.join("\n");
+  var text = out.join("\n");
+  if (model && modelHasContent(model)) {
+    text = text.replace(/\s*$/, "\n") + "\n<!-- heor-form-data " +
+      JSON.stringify(model).replace(/--/g, "-\\u002d") + " -->\n";
+  }
+  return text;
 }
 function csvField(v) { v = (v || "").trim(); return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; }
 function exportCsv(blocks) {
@@ -389,12 +470,8 @@ function exportCsv(blocks) {
   }).join("\n") + (rows.length ? "\n" : "");
 }
 
-// ---- Loading a filled spec into the template blocks ----------------------------------
-
 function loadSpec(text, blocks) {
-  var lines = text.replace(/\r\n/g, "\n").split("\n");
-  // Rows are keyed by section + label: the same label (e.g. "Time horizon")
-  // can appear in more than one section.
+  var lines = text.replace(/\r\n/g, "\n").split("\n").filter(function (l) { return !DATA_RE.test(l); });
   var rowMap = {}, used = {}, sec = "";
   lines.forEach(function (l) {
     if (/^## /.test(l)) sec = l.replace(/^## /, "");
@@ -454,8 +531,6 @@ function loadSpec(text, blocks) {
     } else if (b.kind === "notes") {
       var hi = lines.findIndex(function (l) { return /^## /.test(l) && /notes/i.test(l); });
       if (hi > -1) {
-        // Drop the template's own paragraph if it is still there; keep
-        // anything else, including text written in its place
         var rest = lines.slice(hi + 1).join("\n").trim();
         if (b.para && rest.indexOf(b.para) === 0) rest = rest.slice(b.para.length).trim();
         b.value = rest;
@@ -463,21 +538,563 @@ function loadSpec(text, blocks) {
     }
   });
 }
-
-// ---- Rendering -------------------------------------------------------------------
-
-var blocks = parseTemplate(TEMPLATE);
-
-function esc(s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;"); }
-function inlineMd(s) {
-  return esc(s).replace(/`([^`]+)`/g, "<code>$1</code>").replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+function parseModelData(text) {
+  var m = text.replace(/\r\n/g, "\n").match(DATA_RE);
+  if (!m) return null;
+  try { return JSON.parse(m[1]); } catch (e) { return null; }
 }
+
+// =========================================================================
+// The drawn model: strategies, states and transitions (Markov, partitioned
+// survival, microsimulation, DES), or a decision tree, plus costs, outcomes
+// and the analysis plan. Everything the spec needs is derived from it.
+// =========================================================================
+
+var TYPES = [
+  { id: "tree", label: "Decision tree", desc: "Chance and outcome nodes; short time horizon" },
+  { id: "markov", label: "Markov cohort", desc: "Health states and per-cycle transitions" },
+  { id: "tree+markov", label: "Decision tree + Markov", desc: "Tree for the acute phase, then a Markov model" },
+  { id: "psm", label: "Partitioned survival", desc: "States from PFS and OS survival curves" },
+  { id: "microsim", label: "Microsimulation", desc: "Individual patients moving between states" },
+  { id: "des", label: "Discrete event simulation", desc: "Events and times to event per patient" }
+];
+var KIND_LABEL = { prob: "Probability per cycle", probT: "Probability over a period", rate: "Rate (per year)",
+  survival: "Survival curve", lifetable: "Background mortality (life table)", complement: "Remainder (1 − other exits)" };
+
+function emptyModel() {
+  return { v: 1, type: "", strategies: [], ref: "", states: [], edges: [], tree: null, startCosts: [],
+    analyses: defaultAnalyses(), own: { structure: false, outcomes: false, analyses: false }, seq: 1 };
+}
+function defaultAnalyses() {
+  return { outcome: "both", dsa: { on: true, all: true, params: [] }, threshold: { on: false, param: "", target: "" },
+    psa: { on: true, n: "5000", seed: "2026" }, scen: { on: false, rows: [] }, evpi: { on: false }, evppi: { on: false, groups: "" },
+    structural: "" };
+}
+function modelHasContent(m) { return !!(m.type || m.states.length || m.tree || m.own.analyses || m.strategies.length); }
+var M = emptyModel();
+var blocks = parseTemplate(TEMPLATE);
+var UI = { step: 0, sel: null, connect: null, drag: null, view: "markov" };
+
+function uid(p) { return p + (M.seq++); }
+function slug(s, n) { return ((s || "").toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "") || "x").slice(0, n || 14).replace(/_+$/, ""); }
+function st(id) { return M.states.filter(function (s) { return s.id === id; })[0]; }
+function strat(id) { return M.strategies.filter(function (s) { return s.id === id; })[0]; }
+function stratName(id) { var s = strat(id); return s ? s.name : "?"; }
+function nonRef() { return M.strategies.filter(function (s) { return s.id !== M.ref; }); }
+function usesStates() { return /markov|psm|microsim|des/.test(M.type); }
+function usesTree() { return M.type === "tree" || M.type === "tree+markov"; }
+function edgeLabel(e) { var a = st(e.from), b = st(e.to); return (a ? a.name : "?") + " → " + (b ? b.name : "?"); }
+
+function rowBlock(re) { return blocks.filter(function (b) { return b.kind === "row" && re.test(b.key); })[0]; }
+function gridBlock() { return blocks.filter(function (b) { return b.kind === "grid"; })[0]; }
+function cycleLabel() {
+  var b = rowBlock(/::cycle length$/); if (!b) return "cycle";
+  var o = b.opts.filter(function (o) { return o.checked; })[0]; if (!o) return "1 cycle";
+  var t = fillBlanks(o.label, o.vals).replace(/^Other:\s*/, "").replace(/_{3,}/, "cycle");
+  return t.replace(/\byears?\b/, "yr");
+}
+
+// ---- Automatic parameter names: follow the labels until the user edits them
+function refreshAutoNames() {
+  var many = nonRef().length > 1;
+  M.edges.forEach(function (e) {
+    var a = st(e.from), b = st(e.to), base = slug(a && a.name, 10) + "_" + slug(b && b.name, 10);
+    if (e.auto !== false) e.param = (e.kind === "rate" ? "r_" : e.kind === "survival" ? "surv_" : "p_") + base;
+    Object.keys(e.effects || {}).forEach(function (sid) {
+      var ef = e.effects[sid]; if (ef.auto !== false) ef.param = ef.type.toLowerCase() + "_" + base + (many ? "_" + slug(stratName(sid), 12) : "");
+    });
+    (e.costs || []).forEach(function (c) { if (c.auto !== false) c.param = "c_" + base + (c.name ? "_" + slug(c.name, 8) : ""); });
+    if (e.dis && e.dis.auto !== false) e.dis.param = "du_" + base;
+  });
+  M.states.forEach(function (s) {
+    if (s.uAuto !== false) s.utility = s.hasU === false || s.absorbing ? "" : "u_" + slug(s.name, 14);
+    (s.costs || []).forEach(function (c) {
+      if (c.auto !== false) c.param = "c_" + (c.strategy && c.strategy !== "all" ? slug(stratName(c.strategy), 12) + "_" : "") + slug(s.name, 10) + (c.name ? "_" + slug(c.name, 8) : "");
+    });
+  });
+  M.startCosts.forEach(function (c) { if (c.auto !== false) c.param = "c_start" + (c.strategy && c.strategy !== "all" ? "_" + slug(stratName(c.strategy), 12) : "") + (c.name ? "_" + slug(c.name, 8) : ""); });
+  walkTree(function (n, b) {
+    if (b) {
+      if (b.auto !== false) b.param = b.kind === "complement" ? "" : "p_" + slug(b.label, 16);
+      Object.keys(b.effects || {}).forEach(function (sid) {
+        var ef = b.effects[sid]; if (ef.auto !== false) ef.param = ef.type.toLowerCase() + "_" + slug(b.label, 14) + (many ? "_" + slug(stratName(sid), 12) : "");
+      });
+      (b.costs || []).forEach(function (c) { if (c.auto !== false) c.param = "c_" + slug(b.label, 12) + (c.name ? "_" + slug(c.name, 8) : ""); });
+    }
+    if (n.type === "terminal") {
+      (n.costs || []).forEach(function (c) { if (c.auto !== false) c.param = "c_" + slug(n.label, 12) + (c.name ? "_" + slug(c.name, 8) : ""); });
+      if (n.qAuto !== false) n.qaly = M.type === "tree" ? "q_" + slug(n.label, 14) : "";
+    }
+  });
+}
+function walkTree(fn) {
+  if (!M.tree) return;
+  (function walk(n, b, parent) { fn(n, b, parent); (n.branches || []).forEach(function (br) { walk(br.node, br, n); }); })(M.tree, null, null);
+}
+function findTree(id) {
+  var hit = null;
+  walkTree(function (n, b, parent) { if (n.id === id) hit = { node: n, branch: b, parent: parent }; if (b && b.id === id) hit = { branch: b, node: n, parent: parent }; });
+  return hit;
+}
+
+// ---- Parameters derived from the drawing
+function derivedParams() {
+  var out = [], seen = {}, cyc = cycleLabel();
+  function add(key, name, desc, type, dist, group) {
+    if (!name) return;
+    if (seen[name]) { seen[name].also = (seen[name].also || 0) + 1; return; }
+    seen[name] = { key: key, name: name, description: desc, input_type: type, distribution: dist, group: group };
+    out.push(seen[name]);
+  }
+  function effects(obj, lbl) {
+    Object.keys(obj.effects || {}).forEach(function (sid) {
+      var ef = obj.effects[sid];
+      add(obj.id + ":" + sid, ef.param, ef.type + " for " + lbl + ", " + stratName(sid) + " vs " + stratName(M.ref), ef.type, "lognormal", "Treatment effects");
+    });
+  }
+  if (usesTree()) {
+    walkTree(function (n, b, parent) {
+      if (b) {
+        var lbl = b.label + (parent && parent.label ? " (at " + parent.label + ")" : "");
+        if (b.kind !== "complement") add(b.id + ":p", b.param, "Probability of " + lbl, "probability (period)", "beta", "Probabilities");
+        effects(b, b.label);
+        (b.costs || []).forEach(function (c) { add(c.id, c.param, "Cost of " + b.label + (c.name ? ": " + c.name : ""), "cost", "gamma", "Costs"); });
+      }
+      if (n.type === "terminal" && M.type === "tree") {
+        (n.costs || []).forEach(function (c) { add(c.id, c.param, "Cost at outcome " + n.label + (c.name ? ": " + c.name : ""), "cost", "gamma", "Costs"); });
+        if (n.qaly) add(n.id + ":q", n.qaly, "QALYs for outcome " + n.label, "QALY", "", "Outcomes");
+      }
+    });
+  }
+  if (usesStates()) {
+    M.edges.forEach(function (e) {
+      var lbl = edgeLabel(e);
+      if (e.kind === "prob") add(e.id + ":p", e.param, "Probability " + lbl + " per cycle", "probability (" + cyc + ")", "beta", "Transitions");
+      if (e.kind === "probT") add(e.id + ":p", e.param, "Probability " + lbl + " over " + (e.T || "?") + " years", "probability (" + (e.T || "?") + " yr)", "beta", "Transitions");
+      if (e.kind === "rate") add(e.id + ":p", e.param, "Rate " + lbl + " per year", "rate", "gamma", "Transitions");
+      if (e.kind === "survival") add(e.id + ":p", e.param, "Survival curve for " + lbl, "survival curve", "", "Transitions");
+      effects(e, lbl);
+      (e.costs || []).forEach(function (c) { add(c.id, c.param, "One-off cost of " + lbl + (c.name ? ": " + c.name : ""), "cost", "gamma", "Costs"); });
+      if (e.dis) add(e.id + ":du", e.dis.param, "Disutility of " + lbl + (e.dis.duration ? " (" + e.dis.duration + ")" : ""), "disutility", "gamma", "Utilities");
+    });
+    M.states.forEach(function (s) {
+      (s.costs || []).forEach(function (c) {
+        add(c.id, c.param, "Cost per cycle in " + s.name + (c.name ? ": " + c.name : "") + (c.strategy && c.strategy !== "all" ? " (" + stratName(c.strategy) + " only)" : ""), "cost", "gamma", "Costs");
+      });
+      if (s.utility) add(s.id + ":u", s.utility, "Utility in " + s.name, "utility", "beta", "Utilities");
+    });
+  }
+  M.startCosts.forEach(function (c) { add(c.id, c.param, "Cost at start" + (c.name ? ": " + c.name : "") + (c.strategy && c.strategy !== "all" ? " (" + stratName(c.strategy) + " only)" : ""), "cost", "gamma", "Costs"); });
+  return out;
+}
+
+// Keep the parameter table in step with the drawing. Rows from the drawing
+// carry a _key; their name, description and type follow the drawing, while
+// values, ranges and sources typed by the user are kept.
+function syncParams() {
+  var g = gridBlock(); if (!g) return;
+  var d = derivedParams(), byKey = {};
+  g.rows.forEach(function (r) { if (r._key) byKey[r._key] = r; });
+  d.forEach(function (p) {
+    if (byKey[p.key]) return;
+    var r = g.rows.filter(function (r) { return !r._key && (r.name || "").trim() === p.name; })[0];
+    if (r) { r._key = p.key; byKey[p.key] = r; }
+  });
+  var keep = {}; d.forEach(function (p) { keep[p.key] = true; });
+  g.rows = g.rows.filter(function (r) { return !r._key || keep[r._key]; });
+  d.forEach(function (p) {
+    var r = byKey[p.key];
+    if (!r) { r = { _key: p.key, base: "", low: "", high: "", distribution: p.distribution || "", param_1: "", param_2: "", source: "", notes: "" }; g.rows.push(r); byKey[p.key] = r; }
+    r.name = p.name; r.description = p.description; r.input_type = p.input_type; r._group = p.group;
+    if (r.distribution === undefined) r.distribution = p.distribution || "";
+  });
+  g.rows = d.map(function (p) { return byKey[p.key]; }).concat(g.rows.filter(function (r) { return !r._key; }));
+}
+
+// Write the drawing into the spec's own rows
+function syncSpec() {
+  refreshAutoNames();
+  var own = M.own;
+  if (own.structure && M.type) {
+    var mt = rowBlock(/::model type$/);
+    var lab = TYPES.filter(function (t) { return t.id === M.type; })[0].label;
+    if (mt) mt.opts.forEach(function (o) { o.checked = o.label === lab; });
+    var hs = rowBlock(/::health states/), at = rowBlock(/::allowed transitions/);
+    var states = [], trans = [];
+    if (usesTree() && M.tree) {
+      var outs = [];
+      walkTree(function (n, b, parent) {
+        if (n.type === "terminal") outs.push(n.label + (M.type === "tree+markov" && n.link ? " → enters " + (st(n.link) || {}).name : ""));
+        if (n.type === "chance" && n.branches.length) {
+          trans.push((n.label || "Chance") + ": " + n.branches.map(function (b) {
+            return b.label + " (" + (b.kind === "complement" ? "remainder" : b.param) + effectText(b) + ")";
+          }).join(", "));
+        }
+      });
+      states.push("Decision tree outcomes: " + outs.join(", "));
+    }
+    if (usesStates() && M.states.length) {
+      states.push((M.type === "tree+markov" ? "Markov states: " : "") + M.states.map(function (s) { return s.name + (s.absorbing ? " (absorbing)" : ""); }).join("; "));
+      M.edges.forEach(function (e) {
+        var how = e.kind === "lifetable" ? "life table" : e.kind === "complement" ? "remainder" : e.param + (e.kind === "probT" ? " over " + (e.T || "?") + " yr" : e.kind === "rate" ? ", rate" : e.kind === "survival" ? ", survival curve" : "");
+        trans.push(edgeLabel(e) + " (" + how + effectText(e) + ")");
+      });
+      var starts = M.states.filter(function (s) { return s.start; }).map(function (s) { return s.name; });
+      if (starts.length && M.type !== "tree+markov") trans.push("cohort starts in " + starts.join(", "));
+    }
+    if (hs) hs.value = states.join("; ");
+    if (at) at.value = trans.join("; ");
+    var td = M.edges.filter(function (e) { return e.timeDep; });
+    var tdr = rowBlock(/::tunnel states/);
+    if (tdr && td.length) tdr.value = "Time-dependent: " + td.map(edgeLabel).join("; ");
+    var lt = M.edges.filter(function (e) { return e.kind === "lifetable"; });
+    var bm = rowBlock(/::background mortality/);
+    if (bm && lt.length && !bm.value.trim()) bm.value = "Life table (ONS for UK models) on " + lt.map(edgeLabel).join("; ");
+    // Section 5: tick the input forms the drawing uses
+    var form = blocks.filter(function (b) { return b.kind === "lineopts" && /Per-cycle/.test(b.opts[0].label); })[0];
+    if (form) {
+      var kinds = {}; M.edges.forEach(function (e) { kinds[e.kind] = 1; eachEffect(e, function (ef) { kinds[ef.type] = 1; }); });
+      walkTree(function (n, b) { if (b) { if (b.kind === "prob") kinds.probT = 1; eachEffect(b, function (ef) { kinds[ef.type] = 1; }); } });
+      var map = { "Per-cycle probabilities": "prob", "Probabilities over a different period": "probT", "Rates": "rate",
+        "Hazard ratios": "HR", "Odds ratios": "OR", "Relative risks": "RR", "Survival curves (KM / parametric)": "survival" };
+      form.opts.forEach(function (o) { if (kinds[map[o.label]]) o.checked = true; });
+    }
+  }
+  if (own.outcomes) {
+    var all = [], per = [], once = [], start = [];
+    M.states.forEach(function (s) { (s.costs || []).forEach(function (c) { all.push(c.category); per.push(c.param + " (" + s.name + (c.strategy && c.strategy !== "all" ? ", " + stratName(c.strategy) + " only" : "") + ")"); }); });
+    M.edges.forEach(function (e) { (e.costs || []).forEach(function (c) { all.push(c.category); once.push(c.param + " (" + edgeLabel(e) + ")"); }); });
+    walkTree(function (n, b) {
+      if (b) (b.costs || []).forEach(function (c) { all.push(c.category); once.push(c.param + " (" + b.label + ")"); });
+      if (n.type === "terminal") (n.costs || []).forEach(function (c) { all.push(c.category); once.push(c.param + " (outcome " + n.label + ")"); });
+    });
+    M.startCosts.forEach(function (c) { all.push(c.category); start.push(c.param + (c.strategy && c.strategy !== "all" ? " (" + stratName(c.strategy) + " only)" : "")); });
+    var cats = all.filter(function (c, i) { return c && all.indexOf(c) === i; });
+    var cc = rowBlock(/::cost categories/); if (cc && cats.length) cc.value = cats.join("; ");
+    var oo = rowBlock(/::one off vs per cycle/);
+    if (oo && (per.length || once.length || start.length)) oo.value = [per.length ? "Per cycle: " + per.join(", ") : "", once.length ? "One-off: " + once.join(", ") : "", start.length ? "At start: " + start.join(", ") : ""].filter(Boolean).join("; ");
+    var dis = M.edges.filter(function (e) { return e.dis; });
+    var dr = rowBlock(/::disutilities/); if (dr && dis.length) dr.value = dis.map(function (e) { return e.dis.param + " (" + edgeLabel(e) + (e.dis.duration ? ", " + e.dis.duration : "") + ")"; }).join("; ");
+  }
+  if (own.analyses) syncAnalyses();
+  if (own.structure || own.outcomes) syncParams();
+}
+function eachEffect(o, fn) { Object.keys(o.effects || {}).forEach(function (k) { fn(o.effects[k], k); }); }
+function effectText(o) {
+  var t = []; eachEffect(o, function (ef, sid) { t.push(ef.type + " " + ef.param + " for " + stratName(sid)); });
+  return t.length ? "; " + t.join("; ") : "";
+}
+function syncAnalyses() {
+  var A = M.analyses;
+  var po = rowBlock(/::primary outcome/);
+  if (po) {
+    var w = (wtpValues()[0] || "");
+    po.opts.forEach(function (o) {
+      o.checked = (A.outcome === "icer" && /^ICER/.test(o.label)) || (A.outcome === "nmb" && /^NMB/.test(o.label)) || (A.outcome === "both" && /^Both/.test(o.label));
+      if (/^NMB/.test(o.label)) o.vals = A.outcome !== "icer" && w ? [w.replace(/^£/, "")] : [];
+    });
+  }
+  var ua = rowBlock(/::uncertainty analyses/);
+  if (ua) ua.opts.forEach(function (o) {
+    var map = { "One-way DSA": A.dsa.on, "Threshold analysis": A.threshold.on, "PSA": A.psa.on, "Scenario analyses": A.scen.on, "EVPI": A.evpi.on, "EVPPI": A.evppi.on };
+    if (o.label in map) o.checked = !!map[o.label];
+  });
+  setRow(/::psa iterations/, A.psa.on ? Number(A.psa.n || 0).toLocaleString("en-GB") + "; seed " + (A.psa.seed || "") : "");
+  setRow(/::parameters for dsa/, A.dsa.on ? (A.dsa.all ? "All with low/high" : A.dsa.params.join(", ")) : "");
+  setRow(/::scenario analyses/, A.scen.on ? A.scen.rows.filter(function (r) { return r.name || r.change; }).map(function (r) { return r.name + (r.change ? ": " + r.change : ""); }).join("; ") : "");
+  setRow(/::threshold analysis/, A.threshold.on && A.threshold.param ? A.threshold.param + (A.threshold.target ? "; target: " + A.threshold.target : "") : "");
+  setRow(/::evppi parameter groups/, A.evppi.on ? A.evppi.groups.trim().split(/\n+/).join("; ") : "");
+  setRow(/::structural uncertainty/, A.structural || "");
+}
+function setRow(re, v) { var b = rowBlock(re); if (b) b.value = v; }
+function wtpValues() {
+  var b = rowBlock(/::willingness to pay/); var v = b ? b.value : "";
+  return (v.match(/£\s?[0-9][0-9,]*/g) || []).map(function (s) { return s.replace(/\s/g, ""); });
+}
+
+// After loading a spec with no saved drawing, rebuild what we can from its
+// rows so the diagram and the analysis cards are not empty. These are not
+// written back until the user edits them.
+function modelFromRows() {
+  var mt = rowBlock(/::model type$/);
+  var t = mt && mt.opts.filter(function (o) { return o.checked; })[0];
+  if (t) { var hit = TYPES.filter(function (x) { return x.label === t.label; })[0]; if (hit) M.type = hit.id; }
+  var hs = rowBlock(/::health states/), at = rowBlock(/::allowed transitions/);
+  if (usesStates() && hs && hs.value.trim()) {
+    hs.value.split(/[;\n]+/).forEach(function (part) {
+      var name = part.replace(/\(.*?\)/g, "").replace(/\*.*?\*/g, "").trim();
+      if (!name || name.length > 40 || st(nameId(name))) return;
+      M.states.push({ id: uid("s"), name: name, absorbing: /absorbing|dead|death/i.test(part), start: false, costs: [] });
+    });
+    if (M.states.length) M.states.filter(function (s) { return !s.absorbing; }).slice(0, 1).forEach(function (s) { s.start = true; });
+    (at ? at.value : "").replace(/([A-Za-z][^;,→>()]*?)\s*(?:→|->)\s*([A-Za-z][^;,()]*)/g, function (m, a, b) {
+      var sa = byName(a.trim()), sb = byName(b.trim());
+      if (sa && sb && sa !== sb && !M.edges.some(function (e) { return e.from === sa.id && e.to === sb.id; })) M.edges.push(newEdge(sa.id, sb.id));
+      return m;
+    });
+    autoArrange();
+  }
+  var A = M.analyses, ua = rowBlock(/::uncertainty analyses/), any = false;
+  if (ua && ua.opts.some(function (o) { return o.checked; })) {
+    any = true;
+    ua.opts.forEach(function (o) {
+      var k = { "One-way DSA": "dsa", "Threshold analysis": "threshold", "PSA": "psa", "Scenario analyses": "scen", "EVPI": "evpi", "EVPPI": "evppi" }[o.label];
+      if (k) A[k].on = o.checked;
+    });
+  }
+  var po = rowBlock(/::primary outcome/);
+  if (po) po.opts.forEach(function (o) { if (o.checked) { any = true; A.outcome = /^ICER/.test(o.label) ? "icer" : /^NMB/.test(o.label) ? "nmb" : "both"; } });
+  var psa = rowBlock(/::psa iterations/); if (psa && psa.value) { var nums = psa.value.replace(/,/g, "").match(/\d+/g) || []; if (nums[0]) A.psa.n = nums[0]; if (nums[1]) A.psa.seed = nums[1]; }
+  var dsa = rowBlock(/::parameters for dsa/); if (dsa && dsa.value && !/^all/i.test(dsa.value.trim())) { A.dsa.all = false; A.dsa.params = dsa.value.split(/[,;]\s*/).filter(Boolean); }
+  var sc = rowBlock(/::scenario analyses/); if (sc && sc.value) A.scen.rows = sc.value.split(/;\s*/).filter(Boolean).map(function (s) { var i = s.indexOf(":"); return i > -1 ? { name: s.slice(0, i).trim(), change: s.slice(i + 1).trim() } : { name: s.trim(), change: "" }; });
+  var su = rowBlock(/::structural uncertainty/); if (su) A.structural = su.value;
+  var th = rowBlock(/::threshold analysis/); if (th && th.value) { var p = th.value.split(/;\s*target:\s*/); A.threshold.param = p[0]; A.threshold.target = p[1] || ""; }
+  var ev = rowBlock(/::evppi parameter groups/); if (ev && ev.value) A.evppi.groups = ev.value.split(/;\s*/).join("\n");
+  M.own.analyses = false;
+  M._fromRows = any;
+}
+function byName(n) { var k = n.toLowerCase(); return M.states.filter(function (s) { return s.name.toLowerCase() === k; })[0]; }
+function nameId(n) { var s = byName(n); return s ? s.id : null; }
+
+// ---- Building blocks for the drawing
+function newEdge(from, to) { return { id: uid("e"), from: from, to: to, kind: "prob", param: "", auto: true, effects: {}, costs: [], dis: null, timeDep: false }; }
+function addState(name, x, y, absorbing) {
+  var s = { id: uid("s"), name: name, x: x, y: y, absorbing: !!absorbing, start: !M.states.some(function (z) { return z.start; }) && !absorbing, costs: [], hasU: true };
+  M.states.push(s); return s;
+}
+function newTreeNode(type, label) { return { id: uid("n"), type: type, label: label, branches: [], costs: [], link: "", qaly: "" }; }
+function newBranch(label, kind, node) { return { id: uid("b"), label: label, kind: kind, param: "", auto: true, effects: {}, costs: [], node: node }; }
+function ensureTree() {
+  if (M.tree) return;
+  M.tree = newTreeNode("chance", "Event");
+  M.tree.branches.push(newBranch("Event", "prob", newTreeNode("terminal", "Event")));
+  M.tree.branches.push(newBranch("No event", "complement", newTreeNode("terminal", "No event")));
+}
+function ensureStrategies() {
+  if (M.strategies.length) return;
+  var names = [];
+  function short(v) { return (v || "").split(/[:(\n]/)[0].replace(/\*.*?\*/g, "").trim().slice(0, 40); }
+  var cmp = rowBlock(/::comparator/), itv = rowBlock(/::intervention/);
+  if (cmp && cmp.value) cmp.value.split(/;|\n|,| vs /).forEach(function (s) { if (short(s)) names.push(short(s)); });
+  if (itv && itv.value && short(itv.value)) names.push(short(itv.value));
+  if (!names.length) names = ["Comparator", "Intervention"];
+  names.forEach(function (n) { M.strategies.push({ id: uid("t"), name: n }); });
+  M.ref = M.strategies[0].id;
+}
+var SVG_W = 920, SVG_H = 440, NW = 138, NH = 50;
+function autoArrange() {
+  var live = M.states.filter(function (s) { return !s.absorbing; }), dead = M.states.filter(function (s) { return s.absorbing; });
+  function row(list, y) { list.forEach(function (s, i) { s.x = Math.round(SVG_W * (i + 1) / (list.length + 1)); s.y = y; }); }
+  row(live, live.length > 4 ? 120 : 140); row(dead, 360);
+}
+function template(name) {
+  M.states = []; M.edges = [];
+  if (name === "3state") {
+    var w = addState("Well", 230, 140), s = addState("Sick", 690, 140), d = addState("Dead", 460, 350, true);
+    [[w, s], [w, d], [s, d]].forEach(function (p) { M.edges.push(newEdge(p[0].id, p[1].id)); });
+  } else if (name === "psm") {
+    var pf = addState("Progression-free", 230, 140), pd = addState("Progressed", 690, 140), dd = addState("Dead", 460, 350, true);
+    var e1 = newEdge(pf.id, pd.id); e1.kind = "survival"; e1.auto = false; e1.param = "surv_pfs";
+    var e2 = newEdge(pf.id, dd.id); e2.kind = "survival"; e2.auto = false; e2.param = "surv_os";
+    var e3 = newEdge(pd.id, dd.id); e3.kind = "survival"; e3.auto = false; e3.param = "surv_os";
+    M.edges.push(e1, e2, e3);
+  }
+}
+
+// =========================================================================
+// Drawing: states and transitions
+// =========================================================================
+
+function esc(s) { return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;"); }
+function trunc(s, n) { s = s || ""; return s.length > n ? s.slice(0, n - 1) + "…" : s; }
+function rectPoint(cx, cy, tx, ty) {
+  var dx = tx - cx, dy = ty - cy;
+  if (!dx && !dy) return [cx, cy];
+  var k = Math.min(dx ? (NW / 2 + 3) / Math.abs(dx) : 1e9, dy ? (NH / 2 + 3) / Math.abs(dy) : 1e9);
+  return [cx + dx * k, cy + dy * k];
+}
+function pill(x, y, text, opts) {
+  opts = opts || {};
+  var w = Math.max(24, text.length * 6.4 + 14);
+  return '<g' + (opts.attr || "") + '><rect x="' + (x - w / 2) + '" y="' + (y - 10) + '" width="' + w + '" height="20" rx="10" fill="' + (opts.fill || "#fff") + '" stroke="' + (opts.stroke || "#cfd4dc") + '"/>' +
+    '<text x="' + x + '" y="' + (y + 4) + '" text-anchor="middle" font-family="Arial" font-size="11.5" fill="' + (opts.color || "#344054") + '">' + esc(text) + "</text></g>";
+}
+function stateSvg(mode, forExport) {
+  var sel = forExport ? null : UI.sel, acc = "#0072B2", ink = "#3b4556";
+  var p = ['<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + SVG_W + " " + SVG_H + '" id="stateSvg">',
+    '<defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="' + ink + '"/></marker>' +
+    '<marker id="arA" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="' + acc + '"/></marker>' +
+    '<marker id="arL" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#9aa3b2"/></marker></defs>'];
+  if (forExport) p.push('<rect width="100%" height="100%" fill="#fff"/>');
+  M.states.forEach(function (s) {
+    if (s.absorbing) return;
+    var x = s.x, y = s.y - NH / 2;
+    p.push('<path d="M ' + (x - 16) + " " + y + " C " + (x - 34) + " " + (y - 48) + ", " + (x + 34) + " " + (y - 48) + ", " + (x + 16) + " " + y + '" fill="none" stroke="#9aa3b2" stroke-width="1.4" marker-end="url(#arL)"/>');
+  });
+  M.edges.forEach(function (e) {
+    var a = st(e.from), b = st(e.to); if (!a || !b) return;
+    var rev = M.edges.some(function (f) { return f.from === e.to && f.to === e.from; });
+    var dx = b.x - a.x, dy = b.y - a.y, len = Math.sqrt(dx * dx + dy * dy) || 1, nx = -dy / len, ny = dx / len, off = rev ? 26 : 0;
+    var mx = (a.x + b.x) / 2 + nx * off, my = (a.y + b.y) / 2 + ny * off, cx = (a.x + b.x) / 2 + nx * off * 2, cy = (a.y + b.y) / 2 + ny * off * 2;
+    var s0 = rectPoint(a.x, a.y, rev ? cx : b.x, rev ? cy : b.y), s1 = rectPoint(b.x, b.y, rev ? cx : a.x, rev ? cy : a.y);
+    var on = sel && sel.type === "edge" && sel.id === e.id, col = on ? acc : ink;
+    var d = rev ? "M " + s0[0] + " " + s0[1] + " Q " + cx + " " + cy + " " + s1[0] + " " + s1[1] : "M " + s0[0] + " " + s0[1] + " L " + s1[0] + " " + s1[1];
+    p.push('<g data-edge="' + e.id + '" style="cursor:pointer"><path d="' + d + '" fill="none" stroke="transparent" stroke-width="16"/>' +
+      '<path d="' + d + '" fill="none" stroke="' + col + '" stroke-width="' + (on ? 2.4 : 1.6) + '" marker-end="url(#' + (on ? "arA" : "ar") + ')"' + (e.kind === "lifetable" ? ' stroke-dasharray="5 4"' : "") + "/>");
+    var text;
+    if (mode === "outcomes") {
+      var bits = [];
+      if ((e.costs || []).length) bits.push("£ " + e.costs.length);
+      if (e.dis) bits.push("−u");
+      text = bits.length ? bits.join("  ") : "";
+    } else {
+      text = e.kind === "lifetable" ? "life table" : e.kind === "complement" ? "1 − others" : (e.param || "?");
+      if (Object.keys(e.effects || {}).length) text += "  ×" + Object.keys(e.effects).map(function (k) { return e.effects[k].type; }).join("/");
+    }
+    if (text) p.push(pill(mx, my, text, { stroke: on ? acc : "#cfd4dc", color: on ? "#004f7c" : "#344054", fill: mode === "outcomes" ? "#fff8e6" : "#fff" }));
+    p.push("</g>");
+  });
+  M.states.forEach(function (s) {
+    var on = sel && sel.type === "state" && sel.id === s.id, src = UI.connect && UI.connect.from === s.id;
+    var stroke = on || src ? acc : ink, fill = s.absorbing ? "#eef1f5" : "#fff";
+    p.push('<g data-state="' + s.id + '" style="cursor:' + (UI.connect ? "crosshair" : "move") + '">' +
+      '<rect x="' + (s.x - NW / 2) + '" y="' + (s.y - NH / 2) + '" width="' + NW + '" height="' + NH + '" rx="11" fill="' + fill + '" stroke="' + stroke + '" stroke-width="' + (on || src ? 2.6 : 1.6) + '"' + (src ? ' stroke-dasharray="6 3"' : "") + "/>");
+    var sub = "";
+    if (mode === "outcomes" && !s.absorbing) {
+      var nc = (s.costs || []).length;
+      sub = (nc ? "£ " + nc + " cost" + (nc > 1 ? "s" : "") : "no costs") + (s.utility ? " · u" : "");
+    } else if (s.absorbing) sub = "absorbing";
+    p.push('<text x="' + s.x + '" y="' + (s.y + (sub ? -1 : 5)) + '" text-anchor="middle" font-family="Arial" font-size="14" font-weight="bold" fill="#1d2433">' + esc(trunc(s.name, 17)) + "</text>");
+    if (sub) p.push('<text x="' + s.x + '" y="' + (s.y + 15) + '" text-anchor="middle" font-family="Arial" font-size="11" fill="' + (mode === "outcomes" && (s.costs || []).length ? "#b54708" : "#5b6475") + '">' + esc(sub) + "</text>");
+    if (s.start && M.type !== "tree+markov") p.push(pill(s.x - NW / 2 + 22, s.y - NH / 2 - 2, "start", { fill: "#ecfdf3", stroke: "#abefc6", color: "#067647" }));
+    p.push("</g>");
+  });
+  if (!M.states.length && !forExport) p.push('<text x="' + SVG_W / 2 + '" y="' + SVG_H / 2 + '" text-anchor="middle" font-family="Arial" font-size="15" fill="#5b6475">Add a state, or start from a template above. Double-click the canvas to add a state.</text>');
+  p.push("</svg>");
+  return p.join("");
+}
+
+// =========================================================================
+// Drawing: decision tree
+// =========================================================================
+
+var TX0 = 60, TDX = 200, TDY = 70;
+function treeLayout() {
+  var y = 0, maxD = 1;
+  (function walk(n, d) {
+    n._d = d; maxD = Math.max(maxD, d);
+    if (!n.branches.length) { n._y = y++; return n._y; }
+    var ys = n.branches.map(function (b) { return walk(b.node, d + 1); });
+    n._y = (ys[0] + ys[ys.length - 1]) / 2; return n._y;
+  })(M.tree, 1);
+  return { leaves: y, depth: maxD };
+}
+function treeSvg(mode, forExport) {
+  var L = treeLayout(), W = TX0 + (L.depth + 1) * TDX + 120, H = Math.max(200, L.leaves * TDY + 70);
+  var sel = forExport ? null : UI.sel, acc = "#0072B2", ink = "#3b4556";
+  function X(n) { return TX0 + n._d * TDX; }
+  function Y(n) { return 45 + n._y * TDY; }
+  var p = ['<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + W + " " + H + '" id="treeSvg" style="max-width:' + W + 'px">'];
+  if (forExport) p.push('<rect width="100%" height="100%" fill="#fff"/>');
+  var rx = TX0, ry = Y(M.tree);
+  p.push('<line x1="' + (rx + 12) + '" y1="' + ry + '" x2="' + (X(M.tree) - 14) + '" y2="' + ry + '" stroke="' + ink + '" stroke-width="1.6"/>');
+  p.push('<rect x="' + (rx - 12) + '" y="' + (ry - 12) + '" width="24" height="24" fill="#fff" stroke="' + ink + '" stroke-width="1.8"/>');
+  p.push('<text x="' + (rx - 14) + '" y="' + (ry - 22) + '" font-family="Arial" font-size="11.5" fill="#5b6475">' + esc(trunc(M.strategies.map(function (s) { return s.name; }).join(" vs "), 40)) + "</text>");
+  (function walk(n) {
+    var x = X(n), y = Y(n);
+    n.branches.forEach(function (b) {
+      var c = b.node, cx = X(c), cy = Y(c), on = sel && sel.type === "branch" && sel.id === b.id, col = on ? acc : ink;
+      var d = "M " + (x + 14) + " " + y + " L " + (x + 46) + " " + cy + " L " + (cx - 16) + " " + cy;
+      p.push('<g data-branch="' + b.id + '" style="cursor:pointer"><path d="' + d + '" fill="none" stroke="transparent" stroke-width="16"/><path d="' + d + '" fill="none" stroke="' + col + '" stroke-width="' + (on ? 2.4 : 1.6) + '"/>');
+      p.push('<text x="' + (x + 54) + '" y="' + (cy - 8) + '" font-family="Arial" font-size="12.5" font-weight="bold" fill="' + (on ? "#004f7c" : "#1d2433") + '">' + esc(trunc(b.label, 22)) + "</text>");
+      var t;
+      if (mode === "outcomes") t = (b.costs || []).length ? "£ " + b.costs.length : "";
+      else t = b.kind === "complement" ? "1 − others" : (b.param || "?");
+      if (mode !== "outcomes" && Object.keys(b.effects || {}).length) t += "  ×" + Object.keys(b.effects).map(function (k) { return b.effects[k].type; }).join("/");
+      if (t) { var tw = t.length * 6.4 + 14; p.push(pill(x + 54 + tw / 2, cy + 13, t, { stroke: on ? acc : "#cfd4dc", fill: mode === "outcomes" ? "#fff8e6" : "#fff" })); }
+      p.push("</g>");
+      walk(c);
+    });
+    var on = sel && sel.type === "node" && sel.id === n.id, stroke = on ? acc : ink, sw = on ? 2.6 : 1.8;
+    p.push('<g data-node="' + n.id + '" style="cursor:pointer">');
+    if (n.type === "chance") {
+      p.push('<circle cx="' + x + '" cy="' + y + '" r="14" fill="#fff" stroke="' + stroke + '" stroke-width="' + sw + '"/>');
+      if (n.label && n !== M.tree) p.push('<text x="' + x + '" y="' + (y - 20) + '" text-anchor="middle" font-family="Arial" font-size="11" fill="#5b6475">' + esc(trunc(n.label, 18)) + "</text>");
+    } else {
+      p.push('<path d="M ' + (x - 13) + " " + (y - 13) + " L " + (x + 13) + " " + y + " L " + (x - 13) + " " + (y + 13) + ' z" fill="#eef1f5" stroke="' + stroke + '" stroke-width="' + sw + '"/>');
+      var tl = n.label || "Outcome";
+      if (M.type === "tree+markov") tl += n.link ? "  → " + ((st(n.link) || {}).name || "?") : "  → (pick a Markov state)";
+      else if (mode === "outcomes") tl += ((n.costs || []).length ? "  £ " + n.costs.length : "") + (n.qaly ? "  · QALYs" : "");
+      p.push('<text x="' + (x + 20) + '" y="' + (y + 4) + '" font-family="Arial" font-size="12.5" fill="' + (M.type === "tree+markov" && !n.link ? "#b54708" : "#1d2433") + '">' + esc(trunc(tl, 40)) + "</text>");
+    }
+    p.push("</g>");
+  })(M.tree);
+  p.push("</svg>");
+  return p.join("");
+}
+
+// =========================================================================
+// Checks on the drawing
+// =========================================================================
+
+function issues() {
+  var out = [];
+  if (usesStates()) {
+    if (!M.states.length) out.push("No states yet.");
+    if (M.states.length && !M.states.some(function (s) { return s.absorbing; })) out.push("No absorbing state (for example Dead).");
+    M.states.forEach(function (s) {
+      var exits = M.edges.filter(function (e) { return e.from === s.id; });
+      if (s.absorbing && exits.length) out.push(s.name + " is absorbing but has transitions out.");
+      if (!s.absorbing && !exits.length && M.states.length > 1) out.push(s.name + " has no transitions out: is it absorbing?");
+      var comp = exits.filter(function (e) { return e.kind === "complement"; }).length;
+      if (comp > 1) out.push(s.name + " has more than one ‘remainder’ transition.");
+    });
+    var reach = {}, starts = M.states.filter(function (s) { return s.start; });
+    if (M.type === "tree+markov") walkTree(function (n) { if (n.link) reach[n.link] = 1; });
+    starts.forEach(function (s) { reach[s.id] = 1; });
+    for (var k = 0; k < M.states.length; k++) M.edges.forEach(function (e) { if (reach[e.from]) reach[e.to] = 1; });
+    if (M.type !== "tree+markov" && M.states.length && !starts.length) out.push("Pick the state the cohort starts in.");
+    M.states.forEach(function (s) { if (Object.keys(reach).length && !reach[s.id]) out.push(s.name + " cannot be reached from the starting state."); });
+  }
+  if (usesTree() && M.tree) {
+    walkTree(function (n) {
+      if (n.type === "chance" && n.branches.length < 2) out.push("Chance node " + (n.label || "") + " needs at least two branches.");
+      if (n.type === "chance" && n.branches.filter(function (b) { return b.kind === "complement"; }).length > 1) out.push("Chance node " + (n.label || "") + " has more than one remainder branch.");
+      if (n.type === "terminal" && M.type === "tree+markov" && !n.link) out.push("Outcome " + n.label + " does not lead to a Markov state yet.");
+    });
+  }
+  var names = {}, dupes = [];
+  derivedParams().forEach(function (p) { if (names[p.name] && names[p.name] !== p.input_type) dupes.push(p.name); names[p.name] = p.input_type; });
+  if (dupes.length) out.push("Same parameter name used for different kinds of input: " + dupes.join(", "));
+  return out;
+}
+
+// =========================================================================
+// Steps and rendering
+// =========================================================================
+
+function sections() { return blocks.filter(function (b) { return b.kind === "heading"; }).map(function (b) { return b.section; }); }
+function stepList() { return sections().concat(["Review and export"]); }
+function sectionKind(name) {
+  if (/model structure/i.test(name)) return "structure";
+  if (/costs and outcomes/i.test(name)) return "outcomes";
+  if (/analyses and uncertainty/i.test(name)) return "analyses";
+  if (/^\s*5\.|inputs/i.test(name)) return "inputs";
+  if (/review and export/i.test(name)) return "review";
+  return "generic";
+}
+function isFilled(b) {
+  if (b.slot === "options" || b.kind === "lineopts") return b.opts.some(function (o) { return o.checked; });
+  return !!(b.value || "").trim();
+}
+function requiredBlocks() { return blocks.filter(function (b) { return (b.kind === "row" || b.kind === "lineopts") && b.required; }); }
+function settingIsUK() { var b = rowBlock(/::setting/); return !!(b && UK_RE.test(b.value || "")); }
+
+function inlineMd(s) { return esc(s).replace(/`([^`]+)`/g, "<code>$1</code>").replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>"); }
 function labelHtml(label) {
   var badge = /\[R\]/.test(label) ? '<span class="badge r">Required</span>' : /\[O\]/.test(label) ? '<span class="badge o">Optional</span>' : "";
   return badge + inlineMd(label.replace(/\*\*\[R\]\*\*\s*|\[R\]\s*|\[O\]\s*/g, ""));
 }
-function sectionId(s) { return "s-" + (s || "top").toLowerCase().replace(/[^a-z0-9]+/g, "-"); }
-
 function optsHtml(b, idx) {
   return '<div class="opts">' + b.opts.map(function (o, k) {
     var parts = o.label.split(BLANK_RE), html = "";
@@ -488,28 +1105,337 @@ function optsHtml(b, idx) {
     return '<label class="opt' + (o.checked ? " on" : "") + '"><input type="checkbox" data-b="' + idx + '" data-o="' + k + '"' + (o.checked ? " checked" : "") + ">" + html + "</label>";
   }).join("") + "</div>";
 }
+function fieldHtml(b, idx, first, auto) {
+  var miss = b.required && !isFilled(b), hint = "", uk = settingIsUK();
+  if (uk && /::population/.test(b.key)) hint = '<div class="hint uk">UK model: give the age at entry and the % female. The bundled ONS life tables need them for background mortality.</div>';
+  if (/::background mortality/.test(b.key)) hint = '<div class="hint">' + (uk ? "Leave blank to use the ONS life tables bundled with the skill." : "Non-UK setting: attach a national life table (same format as the bundled ONS table).") + "</div>";
+  if (auto) hint += '<div class="hint"><span class="badge auto">From the diagram</span>Written from your drawing. Edit the drawing to change it.</div>';
+  var ctl;
+  if (auto) ctl = '<div class="readonly">' + esc(b.value || (b.slot === "options" ? optsText("", b.opts) : "")) + "</div>";
+  else if (b.slot === "options" || b.kind === "lineopts") ctl = optsHtml(b, idx);
+  else ctl = '<textarea rows="1" data-b="' + idx + '" placeholder="' + esc(b.tplCell && b.tplCell !== "/" ? b.tplCell : b.tplCell === "/" ? "costs / outcomes" : "") + '">' + esc(b.value) + "</textarea>";
+  var lab = b.kind === "lineopts" ? (b.prefix.trim() ? labelHtml(b.prefix.trim()) : (b.required ? '<span class="badge r">Required</span>' : "") + "Tick each that applies")
+    : b.kind === "lineblank" ? labelHtml(b.before.replace(/:\s*$/, "")) : b.kind === "notes" ? "Notes for Claude" : labelHtml(b.label);
+  if (b.kind === "lineblank" || b.kind === "notes") ctl = '<textarea rows="' + (b.kind === "notes" ? 4 : 1) + '" data-b="' + idx + '"' + (b.kind === "notes" ? ' placeholder="Data files to read, existing code to reuse, decisions made with co-authors, things not to do"' : "") + ">" + esc(b.value) + "</textarea>";
+  return '<div class="field' + (first ? " first" : "") + (miss ? " missing" : "") + '" id="f' + idx + '"><div class="lab">' + lab + hint + "</div><div>" + ctl + "</div></div>";
+}
+function staticHtml(lines) {
+  var t = lines.filter(function (l) { return l.trim() && !/^\s*\|/.test(l) && l.trim() !== "---"; });
+  if (!t.length) return "";
+  var bullets = t.filter(function (l) { return /^\s*- /.test(l); }), other = t.filter(function (l) { return !/^\s*- /.test(l); });
+  return '<div class="muted">' + other.map(function (l) { return "<div>" + inlineMd(l) + "</div>"; }).join("") +
+    (bullets.length ? "<ul>" + bullets.map(function (l) { return "<li>" + inlineMd(l.replace(/^\s*- /, "")) + "</li>"; }).join("") + "</ul>" : "") + "</div>";
+}
+// Generic rendering of a section's blocks; skip(b) hides blocks a custom view handles
+function sectionBody(name, opt) {
+  opt = opt || {};
+  var html = "", buf = [], first = true;
+  blocks.forEach(function (b, idx) {
+    if (b.section !== name || b.kind === "heading") return;
+    if (opt.skip && opt.skip(b)) return;
+    if (b.kind === "static") { buf.push(b.text); return; }
+    if (buf.length) { html += staticHtml(buf); buf = []; }
+    if (b.kind === "grid") { html += gridHtml(b, idx); return; }
+    html += fieldHtml(b, idx, first, opt.auto && opt.auto(b)); first = false;
+  });
+  if (buf.length && !opt.noTrailing) html += staticHtml(buf);
+  return html;
+}
 
+var LEADS = {
+  generic: "",
+  structure: "Choose the model type, then draw it. Each arrow or branch you add becomes a parameter in section 5, and the health states and allowed transitions are written into the spec for you.",
+  inputs: "Rows from your drawing are listed first, with their names set by the diagram. Add base values, ranges, distributions and sources here, or paste from Excel.",
+  outcomes: "Click a state to add its costs per cycle and its utility. Click a transition for one-off costs or a disutility. Everything you add becomes a parameter in section 5.",
+  analyses: "Switch on the analyses you need and set them up. Parameter lists come from section 5."
+};
+
+function render() {
+  var steps = stepList();
+  if (UI.step >= steps.length) UI.step = steps.length - 1;
+  var name = steps[UI.step], kind = sectionKind(name), html = "";
+  html += "<h2>" + esc(name) + "</h2>";
+  if (LEADS[kind]) html += '<p class="lead">' + LEADS[kind] + "</p>";
+  if (kind === "structure") html += structureView(name);
+  else if (kind === "outcomes") html += outcomesView(name);
+  else if (kind === "analyses") html += analysesView(name);
+  else if (kind === "review") html += reviewView();
+  else {
+    if (UI.step === 0) html += introHtml();
+    html += sectionBody(name);
+  }
+  document.getElementById("stage").innerHTML = html;
+  autoGrow(); renderSteps(); renderProgress(); bindCanvas();
+  document.getElementById("prevBtn").disabled = UI.step === 0;
+  var nb = document.getElementById("nextBtn");
+  nb.style.visibility = UI.step === steps.length - 1 ? "hidden" : "visible";
+  nb.innerHTML = UI.step === steps.length - 2 ? "Review &rarr;" : "Next &rarr;";
+  document.getElementById("stepInfo").textContent = "Step " + (UI.step + 1) + " of " + steps.length + ". You can skip ahead; nothing is locked.";
+}
+function introHtml() {
+  var intro = blocks.filter(function (b) { return !b.section && b.kind === "static" && b.text.trim() && !/^#|^---$/.test(b.text); }).map(function (b) { return inlineMd(b.text); }).join(" ");
+  return '<div class="notice info" style="display:block">' + intro + " Your answers are kept in this browser as a draft until you export; <b>Clear form</b> removes them.</div>";
+}
+function renderSteps() {
+  var html = "", sec = sections();
+  stepList().forEach(function (s, i) {
+    var done = false;
+    if (i < sec.length) {
+      var req = requiredBlocks().filter(function (b) { return b.section === s; });
+      done = req.length ? req.every(isFilled) : false;
+    }
+    var label = s.replace(/^(\d+)\.\s*/, ""), num = (s.match(/^(\d+)\./) || [])[1] || "✓";
+    html += '<a data-step="' + i + '" class="' + (i === UI.step ? "cur " : "") + (done ? "done" : "") + '"><span class="n">' + (done && i !== UI.step ? "✓" : num) + "</span>" + esc(label) + "</a>";
+  });
+  document.getElementById("steps").innerHTML = html;
+  // Scroll the step bar sideways only; scrollIntoView would also move the page
+  var nav = document.getElementById("steps"), cur = nav.querySelector("a.cur");
+  if (cur && (cur.offsetLeft < nav.scrollLeft || cur.offsetLeft + cur.offsetWidth > nav.scrollLeft + nav.clientWidth)) nav.scrollLeft = cur.offsetLeft - 20;
+}
+function renderProgress() {
+  var req = requiredBlocks(), done = req.filter(isFilled).length;
+  document.getElementById("pfill").style.width = (req.length ? 100 * done / req.length : 0) + "%";
+  document.getElementById("ptext").textContent = done + " of " + req.length + " required fields done";
+}
+function autoGrow() { document.querySelectorAll("#stage textarea").forEach(function (t) { t.style.height = "auto"; t.style.height = (t.scrollHeight + 2) + "px"; }); }
+
+// ---- Section 4: model structure
+function typeIcon(id) {
+  var s = '<svg width="64" height="30" viewBox="0 0 64 30">', k = 'stroke="#3b4556" stroke-width="1.5" fill="none"';
+  if (id === "tree") s += '<rect x="2" y="11" width="8" height="8" ' + k + '/><path d="M10 15 L22 15" ' + k + '/><circle cx="26" cy="15" r="4" ' + k + '/><path d="M30 15 L40 5 L52 5 M30 15 L40 25 L52 25" ' + k + '/><path d="M52 1 L60 5 L52 9 z M52 21 L60 25 L52 29 z" ' + k + '/>';
+  else if (id === "tree+markov") s += '<circle cx="6" cy="15" r="4" ' + k + '/><path d="M10 15 L18 6 L26 6 M10 15 L18 24 L26 24" ' + k + '/><rect x="32" y="1" width="14" height="10" rx="3" ' + k + '/><rect x="32" y="19" width="14" height="10" rx="3" ' + k + '/><rect x="50" y="10" width="12" height="10" rx="3" ' + k + '/>';
+  else if (id === "psm") s += '<path d="M2 4 C 20 6, 30 24, 62 27" ' + k + '/><path d="M2 4 C 30 4, 44 14, 62 20" stroke="#0072B2" stroke-width="1.5" fill="none"/>';
+  else if (id === "des") s += '<path d="M2 15 L62 15" ' + k + '/><circle cx="14" cy="15" r="3" fill="#3b4556"/><circle cx="32" cy="15" r="3" fill="#3b4556"/><circle cx="52" cy="15" r="3" fill="#0072B2"/>';
+  else if (id === "microsim") s += '<circle cx="10" cy="8" r="3" ' + k + '/><circle cx="20" cy="18" r="3" ' + k + '/><circle cx="8" cy="24" r="3" ' + k + '/><path d="M26 15 L36 15" ' + k + '/><rect x="40" y="6" width="20" height="18" rx="4" ' + k + '/>';
+  else s += '<rect x="2" y="2" width="22" height="11" rx="3" ' + k + '/><rect x="40" y="2" width="22" height="11" rx="3" ' + k + '/><rect x="21" y="18" width="22" height="11" rx="3" fill="#eef1f5" stroke="#3b4556" stroke-width="1.5"/><path d="M24 7 L40 7 M14 13 L24 18 M50 13 L40 18" ' + k + '/>';
+  return s + "</svg>";
+}
+function structureView(name) {
+  var h = "<h3>Model type</h3><div class=\"types\">" + TYPES.map(function (t) {
+    return '<button class="type' + (M.type === t.id ? " on" : "") + '" data-type="' + t.id + '">' + typeIcon(t.id) + "<b>" + t.label + "</b><span>" + t.desc + "</span></button>";
+  }).join("") + "</div>";
+  if (M.type) {
+    ensureStrategies();
+    h += "<h3>Strategies compared</h3>" + strategiesHtml();
+    if (M.type === "tree+markov") {
+      h += '<h3>Draw the model</h3><div class="seg" style="margin-bottom:10px"><button data-view="tree" class="' + (UI.view === "tree" ? "on" : "") + '">1. Decision tree</button><button data-view="markov" class="' + (UI.view !== "tree" ? "on" : "") + '">2. Markov states</button></div>';
+      h += UI.view === "tree" ? treeBuilder("structure") : stateBuilder("structure");
+    } else {
+      h += "<h3>Draw the model</h3>" + (M.type === "tree" ? treeBuilder("structure") : stateBuilder("structure"));
+    }
+  }
+  h += "<h3>Other structure settings</h3>";
+  var drawn = M.own.structure && (M.states.length || M.tree);
+  h += sectionBody(name, {
+    skip: function (b) { return /::model type$/.test(b.key || ""); },
+    auto: function (b) { return drawn && /::health states|::allowed transitions/.test(b.key || ""); }
+  });
+  return h;
+}
+function strategiesHtml() {
+  return '<div class="chips">' + M.strategies.map(function (s) {
+    return '<span class="chip' + (s.id === M.ref ? " ref" : "") + '"><input type="text" data-strat="' + s.id + '" value="' + esc(s.name) + '" style="border:0;padding:2px;width:' + Math.max(80, s.name.length * 8) + 'px;background:transparent">' +
+      (s.id === M.ref ? '<span class="badge auto" title="Treatment effects are relative to this strategy">reference</span>' : '<button class="small" data-setref="' + s.id + '" title="Make this the reference strategy">set as reference</button>') +
+      (M.strategies.length > 2 ? '<button class="small" data-delstrat="' + s.id + '" title="Remove">✕</button>' : "") + "</span>";
+  }).join("") + '<button class="small" data-addstrat="1">+ Strategy</button></div><div class="hint">Taken from section 2. Treatment effects you add to transitions are relative to the reference strategy.</div>';
+}
+function stateBuilder(mode) {
+  var tb = '<div class="toolbar">';
+  if (mode === "structure") {
+    tb += '<button class="small" data-act="addState">+ State</button><button class="small' + (UI.connect ? " on" : "") + '" data-act="connect">' + (UI.connect ? (UI.connect.from ? "Now click the target state" : "Click the source state") : "+ Transition") + "</button>" +
+      '<button class="small" data-act="arrange">Auto-arrange</button><span class="sep"></span>' +
+      '<button class="small" data-act="tpl3">Template: Well / Sick / Dead</button><button class="small" data-act="tplpsm">Template: PFS / PD / Dead</button>';
+  }
+  tb += (mode === "structure" ? '<span class="sep"></span>' : "") + '<button class="small" data-act="svg">Download diagram (SVG)</button><span class="tip">' + (mode === "structure" ? "Drag states to move them. Double-click the canvas to add a state." : "Click a state or arrow to attach costs and outcomes.") + "</span></div>";
+  var iss = mode === "structure" ? issues() : [];
+  return '<div class="builder"><div><div class="canvas-wrap">' + tb + '<div class="canvas' + (UI.connect ? " connecting" : "") + '" id="canvas">' + stateSvg(mode) + "</div></div>" +
+    (mode === "structure" ? '<ul class="issues">' + (iss.length ? iss.map(function (t) { return "<li>" + esc(t) + "</li>"; }).join("") : '<li class="ok">The model diagram looks complete.</li>') + "</ul>" : "") +
+    '</div><div class="inspector" id="inspector">' + inspectorHtml(mode) + "</div></div>";
+}
+function treeBuilder(mode) {
+  ensureTree();
+  var tb = '<div class="toolbar">' + (mode === "structure" ? '<span class="tip" style="margin-left:0">Click a node or branch to edit it. The square is the decision between strategies; the same tree applies to each, with treatment effects on branches.</span>' : '<span class="tip" style="margin-left:0">Click a branch for one-off costs, or an outcome for its costs and QALYs.</span>') +
+    '<button class="small" data-act="svg" style="margin-left:auto">Download diagram (SVG)</button></div>';
+  var iss = mode === "structure" ? issues().filter(function (t) { return /Chance|Outcome|parameter/.test(t); }) : [];
+  return '<div class="builder"><div><div class="canvas-wrap">' + tb + '<div class="canvas" id="canvas">' + treeSvg(mode) + "</div></div>" +
+    (mode === "structure" ? '<ul class="issues">' + (iss.length ? iss.map(function (t) { return "<li>" + esc(t) + "</li>"; }).join("") : '<li class="ok">The tree looks complete.</li>') + "</ul>" : "") +
+    '</div><div class="inspector" id="inspector">' + inspectorHtml(mode) + "</div></div>";
+}
+
+// ---- Inspector (the panel beside the drawing)
+function opt(v, label, cur) { return '<option value="' + esc(v) + '"' + (v === cur ? " selected" : "") + ">" + esc(label) + "</option>"; }
+function stratSelect(f, cur, i) {
+  return '<select data-f="' + f + '"' + (i != null ? ' data-i="' + i + '"' : "") + ">" + opt("all", "All strategies", cur || "all") + M.strategies.map(function (s) { return opt(s.id, s.name + " only", cur); }).join("") + "</select>";
+}
+function costListHtml(list, f, withStrategy) {
+  return list.map(function (c, i) {
+    return '<div class="item"><button class="small link x" data-f="' + f + '.del" data-i="' + i + '" title="Remove">✕</button>' +
+      '<div class="pair"><div><label class="l">Cost item</label><input type="text" data-f="' + f + '.name" data-i="' + i + '" value="' + esc(c.name) + '" placeholder="e.g. Drug"></div>' +
+      '<div><label class="l">Category</label><select data-f="' + f + '.category" data-i="' + i + '">' + COST_CATS.map(function (k) { return opt(k, k, c.category); }).join("") + "</select></div></div>" +
+      (withStrategy ? '<div class="row"><label class="l">Applies to</label>' + stratSelect(f + ".strategy", c.strategy, i) + "</div>" : "") +
+      '<div class="row"><label class="l">Parameter name</label><input type="text" data-f="' + f + '.param" data-i="' + i + '" value="' + esc(c.param) + '"></div></div>';
+  }).join("") + '<button class="small" data-f="' + f + '.add">+ Add cost</button>';
+}
+function effectsHtml(o) {
+  var nr = nonRef(); if (!nr.length) return "";
+  return '<div class="row"><label class="l">Treatment effect vs ' + esc(stratName(M.ref)) + "</label>" + nr.map(function (s) {
+    var ef = (o.effects || {})[s.id];
+    return '<div class="item"><b style="font-size:13px">' + esc(s.name) + '</b><div class="pair" style="margin-top:5px"><select data-f="effect.type" data-s="' + s.id + '">' +
+      opt("", "No effect", ef ? ef.type : "") + opt("HR", "Hazard ratio", ef ? ef.type : "") + opt("OR", "Odds ratio", ef ? ef.type : "") + opt("RR", "Relative risk", ef ? ef.type : "") + "</select>" +
+      (ef ? '<input type="text" data-f="effect.param" data-s="' + s.id + '" value="' + esc(ef.param) + '">' : "<span></span>") + "</div></div>";
+  }).join("") + "</div>";
+}
+function inspectorHtml(mode) {
+  var sel = UI.sel, h = "";
+  if (!sel) {
+    if (mode === "outcomes") {
+      return "<h4>Costs at the start</h4><p class=\"empty\">One-off costs when the model starts, such as treatment initiation. Click a state or arrow on the left for its own costs.</p>" + costListHtml(M.startCosts, "start", true);
+    }
+    return '<p class="empty">' + (usesTree() && !(M.type === "tree+markov" && UI.view !== "tree") ? "Select a node or branch to edit it." : "Select a state or a transition to edit it, or use the toolbar to add one.") + "</p>";
+  }
+  if (sel.type === "state") {
+    var s = st(sel.id); if (!s) return "";
+    if (mode === "outcomes") {
+      h = "<h4>" + esc(s.name) + "</h4>";
+      if (s.absorbing) return h + '<p class="empty">Absorbing state: no costs or utility.</p>';
+      h += '<label class="check"><input type="checkbox" data-f="state.hasU"' + (s.utility ? " checked" : "") + "> Has a utility</label>";
+      if (s.utility) h += '<div class="row"><label class="l">Utility parameter</label><input type="text" data-f="state.utility" value="' + esc(s.utility) + '"></div>';
+      h += '<div class="row"><label class="l">Costs per cycle in this state</label>' + costListHtml(s.costs, "scost", true) + "</div>";
+      return h;
+    }
+    h = '<h4>State</h4><div class="row"><label class="l">Name</label><input type="text" data-f="state.name" value="' + esc(s.name) + '"></div>' +
+      '<label class="check"><input type="checkbox" data-f="state.absorbing"' + (s.absorbing ? " checked" : "") + "> Absorbing (no exits, e.g. Dead)</label>";
+    if (M.type !== "tree+markov" && !s.absorbing) h += '<label class="check" style="margin-top:6px"><input type="checkbox" data-f="state.start"' + (s.start ? " checked" : "") + "> The cohort starts here</label>";
+    var out = M.edges.filter(function (e) { return e.from === s.id; });
+    if (out.length) h += '<div class="row"><label class="l">Transitions out</label>' + out.map(function (e) { return '<div><button class="small link" data-pick="' + e.id + '">' + esc(edgeLabel(e)) + "</button></div>"; }).join("") + (s.absorbing ? "" : '<div class="hint">Staying in ' + esc(s.name) + " = 1 − the sum of these.</div>") + "</div>";
+    h += '<div class="row"><button class="small danger" data-f="state.delete">Delete state</button></div>';
+    return h;
+  }
+  if (sel.type === "edge") {
+    var e = M.edges.filter(function (x) { return x.id === sel.id; })[0]; if (!e) return "";
+    h = "<h4>" + esc(edgeLabel(e)) + "</h4>";
+    if (mode === "outcomes") {
+      h += '<div class="row"><label class="l">One-off costs when this happens</label>' + costListHtml(e.costs, "ecost", false) + "</div>";
+      h += '<label class="check"><input type="checkbox" data-f="edge.dis"' + (e.dis ? " checked" : "") + "> Disutility when this happens</label>";
+      if (e.dis) h += '<div class="pair" style="margin-top:6px"><div><label class="l">Parameter</label><input type="text" data-f="edge.disParam" value="' + esc(e.dis.param) + '"></div><div><label class="l">Duration</label><input type="text" data-f="edge.disDur" value="' + esc(e.dis.duration || "") + '" placeholder="e.g. 1 cycle"></div></div>';
+      return h;
+    }
+    h += '<div class="row"><label class="l">Input</label><select data-f="edge.kind">' + Object.keys(KIND_LABEL).map(function (k) { return opt(k, KIND_LABEL[k], e.kind); }).join("") + "</select></div>";
+    if (e.kind === "probT") h += '<div class="row"><label class="l">Period (years)</label><input type="text" data-f="edge.T" value="' + esc(e.T || "") + '" placeholder="e.g. 5"></div>';
+    if (e.kind === "lifetable") h += '<div class="hint">Death from other causes, by age and sex. For UK models the skill uses the bundled ONS life tables.</div>';
+    else if (e.kind === "complement") h += '<div class="hint">Calculated as 1 minus the other exits from ' + esc((st(e.from) || {}).name) + ". No parameter needed.</div>";
+    else h += '<div class="row"><label class="l">Parameter name</label><input type="text" data-f="edge.param" value="' + esc(e.param) + '"></div>';
+    if (e.kind !== "lifetable" && e.kind !== "complement") h += effectsHtml(e);
+    h += '<label class="check"><input type="checkbox" data-f="edge.timeDep"' + (e.timeDep ? " checked" : "") + "> Changes over time (time-dependent)</label>";
+    h += '<div class="row"><button class="small" data-f="edge.reverse">Reverse direction</button> <button class="small danger" data-f="edge.delete">Delete</button></div>';
+    return h;
+  }
+  if (sel.type === "node") {
+    var hit = findTree(sel.id); if (!hit) return ""; var n = hit.node;
+    if (mode === "outcomes") {
+      if (n.type !== "terminal") return '<p class="empty">Chance node. Click a branch or an outcome to add costs.</p>';
+      if (M.type === "tree+markov") return "<h4>" + esc(n.label) + '</h4><p class="empty">Costs and utilities for this outcome come from the Markov state it enters. Add one-off costs on the branch leading here.</p>';
+      return "<h4>Outcome: " + esc(n.label) + '</h4><div class="row"><label class="l">QALYs parameter</label><input type="text" data-f="node.qaly" value="' + esc(n.qaly) + '"></div><div class="row"><label class="l">Costs at this outcome</label>' + costListHtml(n.costs, "ncost", false) + "</div>";
+    }
+    h = "<h4>" + (n.type === "chance" ? "Chance node" : "Outcome") + '</h4><div class="row"><label class="l">Label</label><input type="text" data-f="node.label" value="' + esc(n.label) + '"></div>';
+    h += '<div class="row"><label class="l">Type</label><select data-f="node.type">' + opt("chance", "Chance node (branches)", n.type) + opt("terminal", "Outcome (end of path)", n.type) + "</select></div>";
+    if (n.type === "chance") h += '<div class="row"><button class="small" data-f="node.addBranch">+ Add branch</button></div>';
+    if (n.type === "terminal" && M.type === "tree+markov") {
+      h += '<div class="row"><label class="l">Enters Markov state</label><select data-f="node.link">' + opt("", "Choose…", n.link) + M.states.map(function (s) { return opt(s.id, s.name, n.link); }).join("") + "</select>" + (M.states.length ? "" : '<div class="hint">Draw the Markov states first (tab 2).</div>') + "</div>";
+    }
+    if (hit.parent) h += '<div class="row"><button class="small danger" data-f="node.delete">Delete this branch</button></div>';
+    return h;
+  }
+  if (sel.type === "branch") {
+    var hb = findTree(sel.id); if (!hb) return ""; var b = hb.branch;
+    if (mode === "outcomes") return "<h4>Branch: " + esc(b.label) + '</h4><div class="row"><label class="l">One-off costs on this branch</label>' + costListHtml(b.costs, "bcost", false) + "</div>";
+    h = '<h4>Branch</h4><div class="row"><label class="l">Label</label><input type="text" data-f="branch.label" value="' + esc(b.label) + '"></div>' +
+      '<div class="row"><label class="l">Probability</label><select data-f="branch.kind">' + opt("prob", "Probability parameter", b.kind) + opt("complement", "Remainder (1 − other branches)", b.kind) + "</select></div>";
+    if (b.kind !== "complement") h += '<div class="row"><label class="l">Parameter name</label><input type="text" data-f="branch.param" value="' + esc(b.param) + '"></div>' + effectsHtml(b);
+    h += '<div class="row"><button class="small" data-pick-node="' + b.node.id + '">Edit the node this leads to</button></div><div class="row"><button class="small danger" data-f="branch.delete">Delete branch</button></div>';
+    return h;
+  }
+  return "";
+}
+
+// ---- Section 6: costs and outcomes
+function outcomesView(name) {
+  var h = "";
+  if (!M.type || (usesStates() && !M.states.length && !usesTree())) {
+    h += '<div class="notice warn">Draw the model in section 4 first; then attach costs and outcomes to it here. <button class="small" data-goto="structure">Go to section 4</button></div>';
+  } else if (M.type === "tree+markov") {
+    h += '<div class="seg" style="margin-bottom:10px"><button data-view="tree" class="' + (UI.view === "tree" ? "on" : "") + '">1. Decision tree</button><button data-view="markov" class="' + (UI.view !== "tree" ? "on" : "") + '">2. Markov states</button></div>';
+    h += UI.view === "tree" ? treeBuilder("outcomes") : stateBuilder("outcomes");
+  } else h += usesTree() ? treeBuilder("outcomes") : stateBuilder("outcomes");
+  h += "<h3>Outcomes and cost settings</h3>";
+  var o = M.own.outcomes;
+  h += sectionBody(name, { auto: function (b) { return o && /::cost categories|::one off vs per cycle|::disutilities/.test(b.key || "") && (b.value || "").trim(); } });
+  return h;
+}
+
+// ---- Section 7: analyses
+function analysesView(name) {
+  M.own.analyses = true; syncAnalyses();
+  var A = M.analyses, params = (gridBlock() ? gridBlock().rows : []).map(function (r) { return r.name; }).filter(Boolean);
+  var w = wtpValues();
+  function card(key, title, desc, body) {
+    var on = A[key].on;
+    return '<div class="acard ' + (on ? "on" : "off") + '"><div class="top"><b>' + title + '</b><label class="switch"><input type="checkbox" data-an="' + key + '.on"' + (on ? " checked" : "") + "><span></span></label></div><div class=\"desc\">" + desc + '</div><div class="body">' + body + "</div></div>";
+  }
+  var h = "<h3>Primary outcome</h3><div class=\"seg\">" + [["icer", "ICER"], ["nmb", "Net monetary benefit"], ["both", "Both"]].map(function (x) {
+    return '<button data-outcome="' + x[0] + '" class="' + (A.outcome === x[0] ? "on" : "") + '">' + x[1] + "</button>";
+  }).join("") + "</div>" + '<div class="hint">' + (w.length ? "Thresholds from section 3: " + esc(w.join(", ")) + " per QALY." : 'No willingness-to-pay threshold in section 3 yet. <button class="small link" data-goto-key="willingness">Add it in section 3</button>') + "</div>";
+  h += '<h3>Uncertainty analyses</h3><div class="cards">';
+  h += card("dsa", "One-way deterministic sensitivity analysis", "Vary each parameter between its low and high value; tornado diagram.",
+    '<label class="check"><input type="radio" name="dsaall" data-an="dsa.all.true"' + (A.dsa.all ? " checked" : "") + "> All parameters with a low/high range</label>" +
+    '<label class="check"><input type="radio" name="dsaall" data-an="dsa.all.false"' + (!A.dsa.all ? " checked" : "") + "> Choose parameters</label>" +
+    (!A.dsa.all ? '<div class="plist">' + (params.length ? params.map(function (p) { return '<label class="check"><input type="checkbox" data-dsap="' + esc(p) + '"' + (A.dsa.params.indexOf(p) > -1 ? " checked" : "") + "> " + esc(p) + "</label>"; }).join("") : '<span class="hint">No parameters yet (section 5).</span>') + "</div>" : ""));
+  h += card("psa", "Probabilistic sensitivity analysis", "Sample all parameters together from their distributions; CE plane and CEAC.",
+    '<div class="pair" style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><div><label class="hint">Iterations</label><input type="number" min="100" step="100" data-an="psa.n" value="' + esc(A.psa.n) + '"></div><div><label class="hint">Random seed</label><input type="number" data-an="psa.seed" value="' + esc(A.psa.seed) + '"></div></div>');
+  h += card("scen", "Scenario analyses", "Alternative assumptions, one row per scenario.",
+    '<table class="mini">' + A.scen.rows.map(function (r, i) {
+      return '<tr><td style="width:38%"><input type="text" data-scen="name" data-i="' + i + '" value="' + esc(r.name) + '" placeholder="Name"></td><td><input type="text" data-scen="change" data-i="' + i + '" value="' + esc(r.change) + '" placeholder="What changes"></td><td style="width:28px"><button class="small link" data-scendel="' + i + '">✕</button></td></tr>';
+    }).join("") + '</table><div class="chips" style="margin-top:6px"><button class="small" data-scenadd="">+ Scenario</button>' +
+    ["Discount rate 1.5%|Costs and outcomes discounted at 1.5% a year", "Shorter time horizon|Horizon reduced to __ years", "Alternative utility values|Utilities from __", "Treatment effect waning|Effect wanes to 1 after __ years"].map(function (s) {
+      var p = s.split("|"); return '<button class="small" data-scenadd="' + esc(s) + '">+ ' + esc(p[0]) + "</button>";
+    }).join("") + "</div>");
+  h += card("threshold", "Threshold analysis", "Find the value of one parameter at which the decision changes.",
+    '<label class="hint">Parameter to vary</label><select data-an="threshold.param">' + opt("", "Choose…", A.threshold.param) + params.map(function (p) { return opt(p, p, A.threshold.param); }).join("") + "</select>" +
+    '<label class="hint" style="display:block;margin-top:6px">Target</label><input type="text" data-an="threshold.target" value="' + esc(A.threshold.target) + '" placeholder="e.g. ICER = ' + esc(w[0] || "£25,000") + ' per QALY">');
+  h += card("evpi", "Expected value of perfect information (EVPI)", "Value of removing all uncertainty, from the PSA. Needs PSA switched on.", A.psa.on ? "" : '<div class="hint uk">Switch on PSA for EVPI.</div>');
+  h += card("evppi", "Expected value of partial perfect information (EVPPI)", "Value of removing uncertainty in groups of parameters. Needs PSA.",
+    '<label class="hint">Parameter groups, one per line (e.g. <code>hr_well_sick</code> or <code>u_well, u_sick</code>)</label><textarea rows="3" data-an="evppi.groups">' + esc(A.evppi.groups) + "</textarea>" + (A.psa.on ? "" : '<div class="hint uk">Switch on PSA for EVPPI.</div>'));
+  h += "</div><h3>Structural uncertainty</h3><textarea rows=\"2\" data-an=\"structural\" placeholder=\"Alternative model structures or assumptions to test, e.g. a different survival distribution\">" + esc(A.structural) + "</textarea>";
+  h += '<div class="hint" style="margin-top:12px">These settings are written into section 7 of model_spec.md. Leave a card off and Claude will not run that analysis.</div>';
+  return h;
+}
+
+// ---- Section 5: parameters
 function gridHtml(b, idx) {
   var head = "<tr>" + b.cols.map(function (c) { return "<th>" + esc(c) + "</th>"; }).join("") + "<th></th></tr>";
-  var body = b.rows.map(function (r, ri) {
-    return "<tr>" + b.cols.map(function (c) {
-      var v = r[c] || "", bad = gridCellBad(r, c);
+  var body = "", group = null;
+  b.rows.forEach(function (r, ri) {
+    var g = r._key ? "From the diagram: " + (r._group || "") : "Added by hand";
+    if (g !== group) { group = g; body += '<tr class="group"><td colspan="' + (b.cols.length + 1) + '">' + esc(g) + "</td></tr>"; }
+    body += "<tr>" + b.cols.map(function (c) {
+      var v = r[c] || "", bad = gridCellBad(r, c), ro = r._key && /^(name|description|input_type)$/.test(c);
       if (c === "distribution") {
         return '<td><select data-g="' + idx + '" data-r="' + ri + '" data-c="' + c + '">' +
           DISTS.concat(DISTS.indexOf(v) < 0 ? [v] : []).map(function (d) { return '<option value="' + esc(d) + '"' + (d === v ? " selected" : "") + ">" + (d || "(propose)") + "</option>"; }).join("") + "</select></td>";
       }
-      var w = { name: 110, description: 220, source: 160, notes: 180, input_type: 140 }[c] || 70;
-      return '<td' + (bad ? ' class="bad" title="' + esc(bad) + '"' : "") + '><input type="text" style="min-width:' + w + 'px" data-g="' + idx + '" data-r="' + ri + '" data-c="' + c + '" value="' + esc(v) + '"' +
-        (c === "input_type" ? ' list="inputTypes"' : "") + (c === "name" ? ' placeholder="e.g. p_example"' : "") + "></td>";
-    }).join("") + '<td><button class="small link" data-del="' + ri + '" data-g="' + idx + '" title="Delete row">✕</button></td></tr>';
-  }).join("");
+      var w = { name: 120, description: 240, source: 160, notes: 180, input_type: 140 }[c] || 70;
+      return "<td" + (bad ? ' class="bad" title="' + esc(bad) + '"' : "") + '><input type="text" style="min-width:' + w + 'px" data-g="' + idx + '" data-r="' + ri + '" data-c="' + c + '" value="' + esc(v) + '"' +
+        (ro ? ' readonly title="Set by the diagram. Rename it in section 4 or 6."' : "") + (c === "input_type" ? ' list="inputTypes"' : "") + (c === "name" ? ' placeholder="e.g. p_example"' : "") + "></td>";
+    }).join("") + "<td>" + (r._key ? '<span class="badge auto" title="Remove it from the diagram to delete it">diagram</span>' : '<button class="small link" data-del="' + ri + '" data-g="' + idx + '" title="Delete row">✕</button>') + "</td></tr>";
+  });
   var example = b.tplRows.map(function (r) { return splitCells(r).join(", "); }).join(" / ");
   return '<div class="grid-tools"><button class="small" data-add="' + idx + '">+ Add parameter</button>' +
     '<button class="small" data-paste="' + idx + '">Paste from Excel / CSV</button>' +
-    '<label class="btn small" style="font-size:13px;padding:4px 9px">Import parameters.csv<input type="file" accept=".csv,text/csv" data-import="' + idx + '" hidden></label>' +
+    '<label class="btn small">Import parameters.csv<input type="file" accept=".csv,text/csv" data-import="' + idx + '" hidden></label>' +
+    '<button class="small" data-act="csv">Export parameters.csv</button>' +
     '<span class="muted">' + b.rows.length + " parameter" + (b.rows.length === 1 ? "" : "s") + "</span></div>" +
     (b.rows.length ? '<div class="grid-wrap"><table class="grid"><thead>' + head + "</thead><tbody>" + body + "</tbody></table></div>"
-      : '<div class="grid-wrap"><div class="empty-grid">No parameters yet. Example row from the template: ' + esc(example) + "</div></div>") +
+      : '<div class="grid-wrap"><div class="empty-grid">No parameters yet. Draw the model in section 4 and they appear here, or add them by hand. Example row from the template: ' + esc(example) + "</div></div>") +
     '<datalist id="inputTypes">' + INPUT_TYPES.map(function (t) { return '<option value="' + esc(t) + '">'; }).join("") + "</datalist>";
 }
 function num(v) { var n = parseFloat(v); return isNaN(n) ? null : n; }
@@ -523,155 +1449,275 @@ function gridCellBad(r, c) {
   return "";
 }
 
-function isFilled(b) {
-  if (b.slot === "options" || b.kind === "lineopts") return b.opts.some(function (o) { return o.checked; });
-  return !!(b.value || "").trim();
+// ---- Review
+function reviewView() {
+  var req = requiredBlocks(), miss = req.filter(function (b) { return !isFilled(b); });
+  var g = gridBlock(), nparams = g ? g.rows.filter(function (r) { return r.name; }).length : 0, filled = g ? g.rows.filter(function (r) { return r.name && r.base; }).length : 0;
+  var A = M.analyses, an = ["dsa", "psa", "scen", "threshold", "evpi", "evppi"].filter(function (k) { return A[k].on; }).length;
+  var h = '<div class="summary"><div><b>' + (req.length - miss.length) + "/" + req.length + "</b><span>required fields done</span></div>" +
+    "<div><b>" + (M.type ? TYPES.filter(function (t) { return t.id === M.type; })[0].label : "—") + "</b><span>model type</span></div>" +
+    "<div><b>" + (usesTree() ? countTerminals() + " outcomes" : M.states.length + " states") + "</b><span>" + (usesStates() ? M.edges.length + " transitions" : "in the tree") + "</span></div>" +
+    "<div><b>" + filled + "/" + nparams + "</b><span>parameters with a base value</span></div>" +
+    "<div><b>" + (M.own.analyses ? an : "—") + "</b><span>uncertainty analyses on</span></div></div>";
+  if (miss.length) {
+    h += '<div class="notice warn" style="display:block"><b>Still empty:</b> you can export anyway; Claude will list these at Stage 0.<div class="missing-list" style="margin-top:6px">' +
+      miss.map(function (b) { return '<button class="small" data-jump="' + blocks.indexOf(b) + '">' + esc((b.label || b.prefix || "Tick boxes").replace(/\*\*\[R\]\*\*\s*/, "").replace(/\(.*?\)/g, "").trim()) + "</button>"; }).join("") + "</div></div>";
+  } else h += '<div class="notice ok">Every required field is filled in.</div>';
+  var iss = issues(); if (M.type && iss.length) h += '<div class="notice warn" style="display:block"><b>Diagram checks:</b><ul class="issues">' + iss.map(function (t) { return "<li>" + esc(t) + "</li>"; }).join("") + "</ul></div>";
+  h += '<div class="chips" style="margin:10px 0 14px"><button class="primary" data-act="export">Export model_spec.md</button><button data-act="csv">Export parameters.csv</button>' + (M.type ? '<button data-act="svg">Download diagram (SVG)</button>' : "") + '<button data-act="copy">Copy markdown</button></div>';
+  h += '<p class="muted">Save both files into the model folder, then tell Claude <code>spec is done</code>. The drawing is stored at the end of model_spec.md, so you can reopen the file here to keep editing.</p>';
+  h += "<h3>Preview of model_spec.md</h3><pre class=\"md\">" + esc(exportSpec(blocks, M)) + "</pre>";
+  return h;
 }
-function settingIsUK() {
-  return blocks.some(function (b) { return b.kind === "row" && /setting/.test(b.key) && UK_RE.test(b.value || ""); });
-}
+function countTerminals() { var n = 0; walkTree(function (x) { if (x.type === "terminal") n++; }); return n; }
 
-function render() {
-  var form = document.getElementById("form"), html = "", open = false, staticBuf = [];
-  function flushStatic() {
-    var t = staticBuf.join("\n").trim(); staticBuf = [];
-    if (!t || /^---$/.test(t)) return;
-    var lines = t.split("\n").filter(function (l) { return !/^\s*\|/.test(l) && l.trim() !== "---"; });
-    if (!lines.length) return;
-    var bullets = lines.filter(function (l) { return /^\s*- /.test(l); });
-    var other = lines.filter(function (l) { return !/^\s*- /.test(l); });
-    html += '<div class="muted">' + other.map(function (l) { return "<div>" + inlineMd(l) + "</div>"; }).join("") +
-      (bullets.length ? "<ul>" + bullets.map(function (l) { return "<li>" + inlineMd(l.replace(/^\s*- /, "")) + "</li>"; }).join("") + "</ul>" : "") + "</div>";
-  }
-  var uk = settingIsUK();
-  blocks.forEach(function (b, idx) {
-    if (!b.section) return;                    // title and intro: shown above
-    if (b.kind !== "static") flushStatic();
-    switch (b.kind) {
-      case "heading":
-        if (open) html += "</section>";
-        html += '<section class="card" id="' + sectionId(b.section) + '"><h2>' + esc(b.section) + "</h2>";
-        open = true; break;
-      case "static": staticBuf.push(b.text); break;
-      case "row":
-        var miss = b.required && !isFilled(b), hint = "";
-        if (uk && /::population/.test(b.key)) hint = '<div class="hint uk">UK model: give the age at entry and the % female. The bundled ONS life tables need them for background mortality.</div>';
-        if (/::background mortality/.test(b.key)) hint = '<div class="hint">' + (uk ? "Leave blank to use the ONS life tables bundled with the skill." : "Non-UK setting: attach a national life table (same format as the bundled ONS table).") + "</div>";
-        html += '<div class="field' + (miss ? " missing" : "") + '" id="f' + idx + '"><div class="lab">' + labelHtml(b.label) + hint + "</div><div>" +
-          (b.slot === "options" ? optsHtml(b, idx)
-            : '<textarea rows="1" data-b="' + idx + '" placeholder="' + esc(b.tplCell && b.tplCell !== "/" ? b.tplCell : b.tplCell === "/" ? "costs / outcomes" : "") + '">' + esc(b.value) + "</textarea>") +
-          "</div></div>";
-        break;
-      case "lineopts":
-        var lab = b.prefix.trim() ? labelHtml(b.prefix.trim()) : (b.required ? '<span class="badge r">Required</span>Tick each that applies' : "");
-        html += '<div class="field' + (b.required && !isFilled(b) ? " missing" : "") + '" id="f' + idx + '"><div class="lab">' + lab + "</div><div>" + optsHtml(b, idx) + "</div></div>";
-        break;
-      case "lineblank":
-        html += '<div class="field" id="f' + idx + '"><div class="lab">' + labelHtml(b.before.replace(/:\s*$/, "")) + '</div><div><textarea rows="1" data-b="' + idx + '">' + esc(b.value) + "</textarea></div></div>";
-        break;
-      case "grid": html += gridHtml(b, idx); break;
-      case "notes":
-        html += '<div class="field" id="f' + idx + '"><div class="lab">Notes for Claude</div><div><textarea rows="4" data-b="' + idx + '" placeholder="Data files to read, existing code to reuse, decisions made with co-authors, things not to do">' + esc(b.value) + "</textarea></div></div>";
-        break;
-    }
-  });
-  flushStatic();
-  if (open) html += "</section>";
-  form.innerHTML = html;
-  autoGrow();
-  renderNav(); renderProgress();
-}
+// =========================================================================
+// Events
+// =========================================================================
 
-function renderIntro() {
-  var intro = blocks.filter(function (b) { return !b.section && b.kind === "static" && b.text.trim() && !/^#|^---$/.test(b.text); })
-    .map(function (b) { return inlineMd(b.text); }).join(" ");
-  document.getElementById("intro").innerHTML = intro + "<br><br>Your answers are kept in this browser as a draft until you export. Export <strong>model_spec.md</strong> (and <strong>parameters.csv</strong> if you filled in the parameter table) into the project folder, then tell Claude <code>spec is done</code>.";
+var stage = document.getElementById("stage");
+function touched(area) { if (area) M.own[area] = true; syncSpec(); saveDraft(); }
+function rerender() { var y = window.scrollY; render(); window.scrollTo(0, y); }
+function redrawCanvas() {
+  var c = document.getElementById("canvas"); if (!c) return;
+  var kind = sectionKind(stepList()[UI.step]), mode = kind === "outcomes" ? "outcomes" : "structure";
+  var tree = usesTree() && (M.type === "tree" || UI.view === "tree");
+  c.innerHTML = tree ? treeSvg(mode) : stateSvg(mode);
 }
-function renderNav() {
-  var html = "", cur = null, counts = {};
-  blocks.forEach(function (b) {
-    if (!b.section) return;
-    var c = counts[b.section] = counts[b.section] || { req: 0, done: 0 };
-    if ((b.kind === "row" || b.kind === "lineopts") && b.required) { c.req++; if (isFilled(b)) c.done++; }
-  });
-  blocks.forEach(function (b) {
-    if (b.kind !== "heading") return;
-    var c = counts[b.section];
-    html += '<a href="#' + sectionId(b.section) + '"><span>' + esc(b.section) + "</span>" +
-      (c.req ? '<span class="count' + (c.done === c.req ? " done" : "") + '">' + (c.done === c.req ? "✓" : c.done + "/" + c.req) + "</span>" : "") + "</a>";
-  });
-  document.getElementById("nav").innerHTML = html;
-}
-function renderProgress() {
-  var req = blocks.filter(function (b) { return (b.kind === "row" || b.kind === "lineopts") && b.required; });
-  var done = req.filter(isFilled).length;
-  document.getElementById("pfill").style.width = (req.length ? 100 * done / req.length : 0) + "%";
-  document.getElementById("ptext").textContent = done + " of " + req.length + " required fields done";
-}
-function autoGrow() {
-  document.querySelectorAll("#form textarea").forEach(function (t) { t.style.height = "auto"; t.style.height = (t.scrollHeight + 2) + "px"; });
-}
-function notice(msg, kind, keep) {
-  var n = document.getElementById("notices");
-  n.innerHTML = '<div class="notice ' + (kind || "info") + '">' + msg + "</div>";
-  if (!keep) setTimeout(function () { if (n.firstChild && n.firstChild.innerHTML.indexOf(msg.slice(0, 20)) > -1) n.innerHTML = ""; }, 6000);
-}
+function curMode() { return sectionKind(stepList()[UI.step]) === "outcomes" ? "outcomes" : "structure"; }
+function area() { return curMode() === "outcomes" ? "outcomes" : "structure"; }
 
-// ---- Events ----------------------------------------------------------------------
-
-var form = document.getElementById("form");
-form.addEventListener("input", function (e) {
+stage.addEventListener("input", function (e) {
   var t = e.target, b;
   if (t.dataset.g !== undefined) {
     var g = blocks[+t.dataset.g]; g.rows[+t.dataset.r][t.dataset.c] = t.value;
     var bad = gridCellBad(g.rows[+t.dataset.r], t.dataset.c), td = t.parentNode;
-    td.classList.toggle("bad", !!bad); td.title = bad;
-  } else if (t.classList.contains("blank")) {
+    td.classList.toggle("bad", !!bad); td.title = bad; saveDraft(); return;
+  }
+  if (t.classList.contains("blank")) {
     b = blocks[+t.dataset.b]; b.opts[+t.dataset.o].vals[+t.dataset.v] = t.value;
-    if (t.value.trim() && !b.opts[+t.dataset.o].checked) {      // typing in a blank ticks its option
-      b.opts[+t.dataset.o].checked = true;
-      t.closest(".opt").classList.add("on");
+    if (t.value.trim() && !b.opts[+t.dataset.o].checked) {
+      b.opts[+t.dataset.o].checked = true; t.closest(".opt").classList.add("on");
       t.closest(".opt").querySelector("input[type=checkbox]").checked = true;
-      refreshField(+t.dataset.b);
     }
-  } else if (t.tagName === "TEXTAREA") {
+    refreshField(+t.dataset.b); saveDraft(); return;
+  }
+  if (t.dataset.b !== undefined && t.tagName === "TEXTAREA") {
     b = blocks[+t.dataset.b]; b.value = t.value;
     t.style.height = "auto"; t.style.height = (t.scrollHeight + 2) + "px";
-    refreshField(+t.dataset.b);
-    if (/setting/.test(b.key || "")) { var y = window.scrollY; render(); window.scrollTo(0, y); }
+    refreshField(+t.dataset.b); saveDraft(); return;
   }
-  saveDraft();
+  if (t.dataset.strat) { var s = strat(t.dataset.strat); s.name = t.value; touched("structure"); redrawCanvas(); return; }
+  if (t.dataset.f) { inspectorInput(t, false); return; }
+  if (t.dataset.an) { analysisInput(t); return; }
+  if (t.dataset.scen) { M.analyses.scen.rows[+t.dataset.i][t.dataset.scen] = t.value; touched("analyses"); return; }
 });
-form.addEventListener("change", function (e) {
+stage.addEventListener("change", function (e) {
   var t = e.target;
-  if (t.type === "checkbox") {
+  if (t.dataset.b !== undefined && t.type === "checkbox") {
     var b = blocks[+t.dataset.b]; b.opts[+t.dataset.o].checked = t.checked;
     t.closest(".opt").classList.toggle("on", t.checked);
     refreshField(+t.dataset.b);
-  } else if (t.tagName === "SELECT") {
-    blocks[+t.dataset.g].rows[+t.dataset.r][t.dataset.c] = t.value;
-  } else if (t.dataset.import !== undefined && t.files[0]) {
+    if (/::cycle length/.test(b.key || "")) touched();
+    saveDraft(); return;
+  }
+  if (t.dataset.g !== undefined && t.tagName === "SELECT") { blocks[+t.dataset.g].rows[+t.dataset.r][t.dataset.c] = t.value; saveDraft(); return; }
+  if (t.dataset.import !== undefined && t.files[0]) {
     var gi = +t.dataset.import, rd = new FileReader();
     rd.onload = function () { addRows(blocks[gi], parseDelimited(rd.result)); t.value = ""; };
-    rd.readAsText(t.files[0]);
-    return;
+    rd.readAsText(t.files[0]); return;
   }
-  saveDraft();
+  if (t.dataset.f) { inspectorInput(t, true); return; }
+  if (t.dataset.an) { analysisInput(t, true); return; }
+  if (t.dataset.dsap) {
+    var A = M.analyses.dsa, p = t.dataset.dsap;
+    A.params = A.params.filter(function (x) { return x !== p; }); if (t.checked) A.params.push(p);
+    touched("analyses"); return;
+  }
+  if (t.dataset.b !== undefined && /::setting/.test(blocks[+t.dataset.b].key || "")) rerender();
 });
-form.addEventListener("click", function (e) {
-  var t = e.target.closest("button"); if (!t) return;
-  var y = window.scrollY;
-  if (t.dataset.add !== undefined) { blocks[+t.dataset.add].rows.push({}); render(); window.scrollTo(0, y); saveDraft(); }
-  if (t.dataset.del !== undefined) { blocks[+t.dataset.g].rows.splice(+t.dataset.del, 1); render(); window.scrollTo(0, y); saveDraft(); }
-  if (t.dataset.paste !== undefined) { pasteTarget = +t.dataset.paste; document.getElementById("pasteText").value = ""; document.getElementById("pasteDlg").showModal(); }
+stage.addEventListener("focusout", function (e) {
+  var t = e.target;
+  if (t.dataset.b !== undefined && /::setting|::willingness/.test(blocks[+t.dataset.b].key || "")) rerender();
+  if (t.dataset.f && /name|label|param/.test(t.dataset.f)) rerender();
+  if (t.dataset.strat) rerender();
 });
+stage.addEventListener("click", function (e) {
+  var t = e.target.closest("button,a"); if (!t) return;
+  var d = t.dataset;
+  if (d.type) {
+    var prev = M.type; M.type = d.type; M.own.structure = true; UI.sel = null; UI.connect = null;
+    if (usesTree()) ensureTree();
+    if (M.type === "tree+markov") UI.view = "tree";
+    if (usesStates() && !M.states.length && prev !== d.type && !/tree/.test(d.type)) template(d.type === "psm" ? "psm" : "3state");
+    touched("structure"); rerender(); return;
+  }
+  if (d.view) { UI.view = d.view; UI.sel = null; UI.connect = null; rerender(); return; }
+  if (d.act) { toolbar(d.act); return; }
+  if (d.addstrat) { M.strategies.push({ id: uid("t"), name: "Strategy " + (M.strategies.length + 1) }); touched("structure"); rerender(); return; }
+  if (d.setref) { M.ref = d.setref; M.edges.concat(allBranches()).forEach(function (o) { delete (o.effects || {})[d.setref]; }); touched("structure"); rerender(); return; }
+  if (d.delstrat) { M.strategies = M.strategies.filter(function (s) { return s.id !== d.delstrat; }); if (M.ref === d.delstrat) M.ref = M.strategies[0].id; touched("structure"); rerender(); return; }
+  if (d.pick) { UI.sel = { type: "edge", id: d.pick }; rerender(); return; }
+  if (d.pickNode) { UI.sel = { type: "node", id: d.pickNode }; rerender(); return; }
+  if (d.f) { inspectorAction(d.f, d); return; }
+  if (d.outcome) { M.analyses.outcome = d.outcome; touched("analyses"); rerender(); return; }
+  if (d.scenadd !== undefined) {
+    var p = d.scenadd ? d.scenadd.split("|") : ["", ""];
+    M.analyses.scen.on = true; M.analyses.scen.rows.push({ name: p[0], change: p[1] || "" }); touched("analyses"); rerender(); return;
+  }
+  if (d.scendel !== undefined) { M.analyses.scen.rows.splice(+d.scendel, 1); touched("analyses"); rerender(); return; }
+  if (d.goto) { UI.step = stepList().findIndex(function (s) { return sectionKind(s) === d.goto; }); UI.sel = null; render(); window.scrollTo(0, 0); return; }
+  if (d.gotoKey) { var rb = rowBlock(new RegExp(d.gotoKey)); if (rb) jumpTo(blocks.indexOf(rb)); return; }
+  if (d.jump !== undefined) { jumpTo(+d.jump); return; }
+  if (d.add !== undefined) { blocks[+d.add].rows.push({}); saveDraft(); rerender(); return; }
+  if (d.del !== undefined) { blocks[+d.g].rows.splice(+d.del, 1); saveDraft(); rerender(); return; }
+  if (d.paste !== undefined) { pasteTarget = +d.paste; document.getElementById("pasteText").value = ""; document.getElementById("pasteDlg").showModal(); return; }
+});
+function allBranches() { var out = []; walkTree(function (n, b) { if (b) out.push(b); }); return out; }
+function jumpTo(idx) {
+  var b = blocks[idx]; UI.step = sections().indexOf(b.section); UI.sel = null; render();
+  var el = document.getElementById("f" + idx); if (el) { el.scrollIntoView({ block: "center" }); var i = el.querySelector("textarea,input"); if (i) i.focus(); }
+}
 function refreshField(idx) {
   var b = blocks[idx], el = document.getElementById("f" + idx);
   if (el && b.required) el.classList.toggle("missing", !isFilled(b));
-  renderNav(); renderProgress();
+  renderSteps(); renderProgress();
 }
 
-// Delimited text (Excel paste = tabs, or CSV with quotes) -> rows of cells
+function toolbar(act) {
+  if (act === "addState") { var s = addState("State " + (M.states.length + 1), 120 + (M.states.length % 5) * 170, 120 + Math.floor(M.states.length / 5) * 120); UI.sel = { type: "state", id: s.id }; touched("structure"); rerender(); return; }
+  if (act === "connect") { UI.connect = UI.connect ? null : { from: null }; rerender(); return; }
+  if (act === "arrange") { autoArrange(); touched("structure"); rerender(); return; }
+  if (act === "tpl3" || act === "tplpsm") {
+    if (M.states.length && !confirm("Replace the current drawing with the template?")) return;
+    template(act === "tpl3" ? "3state" : "psm"); UI.sel = null; touched("structure"); rerender(); return;
+  }
+  if (act === "svg") { downloadSvg(); return; }
+  if (act === "export") { exportNow(); return; }
+  if (act === "csv") { exportCsvNow(); return; }
+  if (act === "copy") { copyNow(); return; }
+}
+function inspectorInput(t, isChange) {
+  var f = t.dataset.f, sel = UI.sel, i = t.dataset.i != null ? +t.dataset.i : null, v = t.type === "checkbox" ? t.checked : t.value;
+  var obj = sel && (sel.type === "state" ? st(sel.id) : sel.type === "edge" ? M.edges.filter(function (x) { return x.id === sel.id; })[0] : sel.type === "node" ? (findTree(sel.id) || {}).node : sel.type === "branch" ? (findTree(sel.id) || {}).branch : null);
+  var list = f.split(".")[0], prop = f.split(".")[1], full = false;
+  var lists = { scost: obj && obj.costs, ecost: obj && obj.costs, ncost: obj && obj.costs, bcost: obj && obj.costs, start: M.startCosts };
+  if (lists[list] && i != null) {
+    var c = lists[list][i]; c[prop] = v; if (prop === "param") c.auto = false;
+    touched(area()); if (isChange) full = true; else { redrawCanvas(); }
+    if (full) rerender(); return;
+  }
+  if (f === "effect.type") {
+    var sid = t.dataset.s; obj.effects = obj.effects || {};
+    if (!v) delete obj.effects[sid]; else obj.effects[sid] = { type: v, param: "", auto: true };
+    touched("structure"); rerender(); return;
+  }
+  if (f === "effect.param") { var ef = obj.effects[t.dataset.s]; ef.param = v; ef.auto = false; touched("structure"); redrawCanvas(); return; }
+  switch (f) {
+    case "state.name": obj.name = v; break;
+    case "state.absorbing": obj.absorbing = v; if (v) { obj.start = false; M.edges = M.edges.filter(function (e) { return e.from !== obj.id; }); } full = true; break;
+    case "state.start": M.states.forEach(function (s) { s.start = false; }); obj.start = v; full = true; break;
+    case "state.hasU": obj.hasU = v; obj.uAuto = true; full = true; break;
+    case "state.utility": obj.utility = v; obj.uAuto = false; break;
+    case "edge.kind": obj.kind = v; obj.auto = true; if (v === "lifetable" || v === "complement") obj.effects = {}; full = true; break;
+    case "edge.T": obj.T = v; break;
+    case "edge.param": obj.param = v; obj.auto = false; break;
+    case "edge.timeDep": obj.timeDep = v; full = true; break;
+    case "edge.dis": obj.dis = v ? { param: "", auto: true, duration: "" } : null; full = true; break;
+    case "edge.disParam": obj.dis.param = v; obj.dis.auto = false; break;
+    case "edge.disDur": obj.dis.duration = v; break;
+    case "node.label": obj.label = v; break;
+    case "node.type":
+      if (v === "terminal" && obj.branches.length && !confirm("Make this an outcome? Its branches will be removed.")) { t.value = obj.type; return; }
+      obj.type = v; if (v === "terminal") obj.branches = []; else if (!obj.branches.length) { obj.branches.push(newBranch("Yes", "prob", newTreeNode("terminal", "Yes")), newBranch("No", "complement", newTreeNode("terminal", "No"))); }
+      full = true; break;
+    case "node.link": obj.link = v; full = true; break;
+    case "node.qaly": obj.qaly = v; obj.qAuto = false; break;
+    case "branch.label": obj.label = v; obj.node.label = obj.node.type === "terminal" && (obj.node.label === "" || obj.node._follow !== false) ? v : obj.node.label; break;
+    case "branch.kind": obj.kind = v; obj.auto = true; if (v === "complement") obj.effects = {}; full = true; break;
+    case "branch.param": obj.param = v; obj.auto = false; break;
+  }
+  touched(area());
+  if (full || isChange) rerender(); else redrawCanvas();
+}
+function inspectorAction(f, d) {
+  var sel = UI.sel, i = d.i != null ? +d.i : null;
+  var obj = sel && (sel.type === "state" ? st(sel.id) : sel.type === "edge" ? M.edges.filter(function (x) { return x.id === sel.id; })[0] : sel.type === "node" ? (findTree(sel.id) || {}).node : sel.type === "branch" ? (findTree(sel.id) || {}).branch : null);
+  var list = f.split(".")[0], act = f.split(".")[1];
+  var lists = { scost: obj && obj.costs, ecost: obj && obj.costs, ncost: obj && obj.costs, bcost: obj && obj.costs, start: M.startCosts };
+  if (lists[list]) {
+    if (act === "add") lists[list].push({ id: uid("c"), name: "", category: list === "scost" ? "Health-state management" : list === "start" ? "Drug acquisition" : "Hospitalisation", strategy: "all", param: "", auto: true });
+    if (act === "del") lists[list].splice(i, 1);
+    touched(area()); rerender(); return;
+  }
+  if (f === "state.delete") { M.edges = M.edges.filter(function (e) { return e.from !== obj.id && e.to !== obj.id; }); M.states = M.states.filter(function (s) { return s !== obj; }); walkTree(function (n) { if (n.link === obj.id) n.link = ""; }); UI.sel = null; }
+  if (f === "edge.delete") { M.edges = M.edges.filter(function (e) { return e !== obj; }); UI.sel = null; }
+  if (f === "edge.reverse") { var x = obj.from; obj.from = obj.to; obj.to = x; obj.auto = true; }
+  if (f === "node.addBranch") { var n = obj.branches.length + 1; obj.branches.push(newBranch("Branch " + n, "prob", newTreeNode("terminal", "Branch " + n))); }
+  if (f === "node.delete" || f === "branch.delete") {
+    var hit = findTree(sel.id), parent = hit.parent, br = hit.branch;
+    if (parent) parent.branches = parent.branches.filter(function (b) { return b !== br; });
+    UI.sel = null;
+  }
+  touched("structure"); rerender();
+}
+function analysisInput(t, isChange) {
+  var path = t.dataset.an.split("."), A = M.analyses, v = t.type === "checkbox" ? t.checked : t.value;
+  if (path[0] === "dsa" && path[1] === "all") { A.dsa.all = path[2] === "true"; touched("analyses"); rerender(); return; }
+  if (path.length === 1) A[path[0]] = v; else A[path[0]][path[1]] = v;
+  touched("analyses");
+  if (path[1] === "on") rerender();
+}
+
+// ---- Canvas: drag, select, connect
+function svgPoint(svg, evt) { var pt = svg.createSVGPoint(); pt.x = evt.clientX; pt.y = evt.clientY; return pt.matrixTransform(svg.getScreenCTM().inverse()); }
+function bindCanvas() {
+  var c = document.getElementById("canvas"); if (!c) return;
+  c.onpointerdown = function (e) {
+    var svg = c.querySelector("svg"); if (!svg) return;
+    var sg = e.target.closest("[data-state]"), eg = e.target.closest("[data-edge]"), ng = e.target.closest("[data-node]"), bg = e.target.closest("[data-branch]");
+    if (sg) {
+      var s = st(sg.dataset.state), p = svgPoint(svg, e);
+      UI.drag = { id: s.id, dx: p.x - s.x, dy: p.y - s.y, moved: false, svg: svg };
+      e.preventDefault(); return;
+    }
+    if (eg) { UI.sel = { type: "edge", id: eg.dataset.edge }; UI.connect = null; rerender(); return; }
+    if (ng) { UI.sel = { type: "node", id: ng.dataset.node }; rerender(); return; }
+    if (bg) { UI.sel = { type: "branch", id: bg.dataset.branch }; rerender(); return; }
+    if (UI.sel || UI.connect) { UI.sel = null; UI.connect = null; rerender(); }
+  };
+  c.ondblclick = function (e) {
+    if (curMode() !== "structure" || usesTree() && (M.type === "tree" || UI.view === "tree")) return;
+    if (e.target.closest("[data-state],[data-edge]")) return;
+    var p = svgPoint(c.querySelector("svg"), e);
+    var s = addState("State " + (M.states.length + 1), Math.round(p.x), Math.round(p.y));
+    UI.sel = { type: "state", id: s.id }; touched("structure"); rerender();
+  };
+}
+window.addEventListener("pointermove", function (e) {
+  var d = UI.drag; if (!d) return;
+  if (curMode() !== "structure") return;
+  var s = st(d.id), p = svgPoint(d.svg, e);
+  var nx = Math.max(NW / 2 + 4, Math.min(SVG_W - NW / 2 - 4, p.x - d.dx)), ny = Math.max(NH / 2 + 30, Math.min(SVG_H - NH / 2 - 4, p.y - d.dy));
+  if (Math.abs(nx - s.x) + Math.abs(ny - s.y) > 2) d.moved = true;
+  if (d.moved) { s.x = Math.round(nx); s.y = Math.round(ny); var c = document.getElementById("canvas"); c.innerHTML = stateSvg(curMode()); d.svg = c.querySelector("svg"); }
+});
+window.addEventListener("pointerup", function () {
+  var d = UI.drag; if (!d) return; UI.drag = null;
+  if (d.moved) { saveDraft(); return; }
+  if (UI.connect) {
+    if (!UI.connect.from) { UI.connect.from = d.id; rerender(); return; }
+    var from = UI.connect.from, to = d.id, a = st(from);
+    if (from === to) { UI.connect = { from: null }; rerender(); return; }
+    if (a.absorbing) { notice(esc(a.name) + " is absorbing, so it cannot have transitions out.", "warn"); UI.connect = { from: null }; rerender(); return; }
+    if (M.edges.some(function (e) { return e.from === from && e.to === to; })) { notice("That transition already exists.", "warn"); UI.connect = { from: null }; rerender(); return; }
+    var e = newEdge(from, to); M.edges.push(e); UI.connect = null; UI.sel = { type: "edge", id: e.id };
+    touched("structure"); rerender(); return;
+  }
+  UI.sel = { type: "state", id: d.id }; rerender();
+});
+
+// ---- Parameters paste/import
 function parseDelimited(text) {
   text = text.replace(/\r\n/g, "\n").replace(/\n+$/, "");
   var delim = text.split("\n")[0].indexOf("\t") > -1 ? "\t" : ",";
@@ -689,29 +1735,33 @@ function parseDelimited(text) {
 }
 function addRows(g, rows) {
   if (!rows.length) return;
-  var cols = PARAM_COLS, start = 0;
-  var head = rows[0].map(function (c) { return c.trim().toLowerCase(); });
+  var cols = PARAM_COLS, start = 0, head = rows[0].map(function (c) { return c.trim().toLowerCase(); });
   if (head.indexOf("name") > -1 && (head.indexOf("base") > -1 || head.indexOf("description") > -1)) { cols = head; start = 1; }
-  var added = 0;
+  var added = 0, merged = 0;
   rows.slice(start).forEach(function (r) {
-    var o = {};
-    cols.forEach(function (c, k) { if (PARAM_COLS.indexOf(c) > -1) o[c] = (r[k] || "").trim(); });
+    var o = {}; cols.forEach(function (c, k) { if (PARAM_COLS.indexOf(c) > -1) o[c] = (r[k] || "").trim(); });
     if (o.name === "p_example") return;
-    g.rows.push(o); added++;
+    var existing = g.rows.filter(function (x) { return x._key && x.name === o.name; })[0];
+    if (existing) { ["base", "low", "high", "distribution", "param_1", "param_2", "source", "notes"].forEach(function (c) { if (o[c]) existing[c] = o[c]; }); merged++; }
+    else { g.rows.push(o); added++; }
   });
-  render(); saveDraft();
-  notice("Added " + added + " parameter" + (added === 1 ? "" : "s") + ".", "ok");
+  saveDraft(); rerender();
+  notice("Added " + added + " parameter" + (added === 1 ? "" : "s") + (merged ? "; filled in " + merged + " from the diagram" : "") + ".", "ok");
 }
 var pasteTarget = null;
 document.getElementById("pasteCancel").onclick = function () { document.getElementById("pasteDlg").close(); };
-document.getElementById("pasteOk").onclick = function () {
-  document.getElementById("pasteDlg").close();
-  addRows(blocks[pasteTarget], parseDelimited(document.getElementById("pasteText").value));
-};
+document.getElementById("pasteOk").onclick = function () { document.getElementById("pasteDlg").close(); addRows(blocks[pasteTarget], parseDelimited(document.getElementById("pasteText").value)); };
 
+// ---- Saving files
+function notice(msg, kind, keep) {
+  var n = document.getElementById("notices");
+  n.innerHTML = '<div class="notice ' + (kind || "info") + '">' + msg + "</div>";
+  if (!keep) setTimeout(function () { if (n.firstChild && n.firstChild.innerHTML === msg) n.innerHTML = ""; }, 6000);
+}
 function download(name, text, type) {
   if (window.showSaveFilePicker) {
-    window.showSaveFilePicker({ suggestedName: name, types: [{ description: name, accept: { [type]: ["." + name.split(".").pop()] } }] })
+    var acc = {}; acc[type] = ["." + name.split(".").pop()];
+    window.showSaveFilePicker({ suggestedName: name, types: [{ description: name, accept: acc }] })
       .then(function (h) { return h.createWritable(); })
       .then(function (w) { return w.write(text).then(function () { return w.close(); }); })
       .then(function () { notice("Saved " + esc(name) + ".", "ok"); })
@@ -721,51 +1771,71 @@ function download(name, text, type) {
     var a = document.createElement("a");
     a.href = URL.createObjectURL(new Blob([text], { type: type + ";charset=utf-8" }));
     a.download = name; document.body.appendChild(a); a.click(); a.remove();
-    notice("Downloaded " + esc(name) + ". Move it into the project folder" + (name === "parameters.csv" ? " as inputs/parameters.csv." : "."), "ok");
+    notice("Downloaded " + esc(name) + ". Move it into the project folder" + (name === "parameters.csv" ? " (Claude moves it to inputs/parameters.csv)." : "."), "ok");
   }
 }
-document.getElementById("exportSpec").onclick = function () {
-  var missing = blocks.filter(function (b) { return (b.kind === "row" || b.kind === "lineopts") && b.required && !isFilled(b); }).length;
+function exportNow() {
+  syncSpec();
+  var missing = requiredBlocks().filter(function (b) { return !isFilled(b); }).length;
   if (missing) notice(missing + " required field" + (missing === 1 ? " is" : "s are") + " still empty. You can still export; Claude will list them at Stage 0.", "warn", true);
-  download("model_spec.md", exportSpec(blocks), "text/markdown");
-};
-document.getElementById("exportCsv").onclick = function () {
-  var g = blocks.filter(function (b) { return b.kind === "grid"; })[0];
+  download("model_spec.md", exportSpec(blocks, M), "text/markdown");
+}
+function exportCsvNow() {
+  syncSpec();
+  var g = gridBlock();
   if (!g || !g.rows.some(function (r) { return (r.name || "").trim(); })) { notice("The parameter table is empty.", "warn"); return; }
   download("parameters.csv", exportCsv(blocks), "text/csv");
-};
-document.getElementById("copySpec").onclick = function () {
-  navigator.clipboard.writeText(exportSpec(blocks)).then(function () { notice("Spec copied as markdown.", "ok"); },
-    function () { notice("Copy was blocked by the browser. Use Export instead.", "warn"); });
+}
+function copyNow() {
+  syncSpec();
+  navigator.clipboard.writeText(exportSpec(blocks, M)).then(function () { notice("Spec copied as markdown.", "ok"); }, function () { notice("Copy was blocked by the browser. Use Export instead.", "warn"); });
+}
+function downloadSvg() {
+  if (!M.type) return;
+  var mode = curMode(), svg = usesTree() && (M.type === "tree" || UI.view === "tree") ? treeSvg(mode, true) : stateSvg(mode, true);
+  download("model_diagram.svg", svg, "image/svg+xml");
+}
+document.getElementById("exportSpec").onclick = exportNow;
+document.getElementById("prevBtn").onclick = function () { if (UI.step > 0) { UI.step--; UI.sel = null; UI.connect = null; render(); window.scrollTo(0, 0); saveDraft(); } };
+document.getElementById("nextBtn").onclick = function () { if (UI.step < stepList().length - 1) { UI.step++; UI.sel = null; UI.connect = null; render(); window.scrollTo(0, 0); saveDraft(); } };
+document.getElementById("steps").onclick = function (e) { var a = e.target.closest("[data-step]"); if (!a) return; UI.step = +a.dataset.step; UI.sel = null; UI.connect = null; render(); window.scrollTo(0, 0); saveDraft(); };
+document.getElementById("clearBtn").onclick = function () {
+  if (!confirm("Clear every answer, the drawing and the parameters, and start a blank spec? This cannot be undone. Files you have already exported are not affected.")) return;
+  startFresh(); notice("Cleared. This is a blank spec.", "ok");
 };
 document.getElementById("openSpec").onchange = function (e) {
   var f = e.target.files[0]; if (!f) return;
   var rd = new FileReader();
   rd.onload = function () {
-    blocks = parseTemplate(TEMPLATE);
-    loadSpec(rd.result, blocks);
-    render(); saveDraft();
-    notice("Loaded " + esc(f.name) + ". Lines that are not part of the template (for example extra notes you added by hand) are not shown; keep a copy of the original if you need them.", "info", true);
+    loadAll(rd.result); UI.step = 0; UI.sel = null; render(); saveDraft();
+    notice("Opened " + esc(f.name) + (parseModelData(rd.result) ? ", including its drawing." : ". It had no saved drawing, so the diagram was rebuilt from its health states and transitions where possible.") + " Lines that are not part of the template are not kept.", "info", true);
     e.target.value = "";
   };
   rd.readAsText(f);
 };
+function loadAll(text) {
+  blocks = parseTemplate(TEMPLATE); loadSpec(text, blocks);
+  var data = parseModelData(text);
+  M = emptyModel();
+  if (data) { Object.keys(data).forEach(function (k) { M[k] = data[k]; }); M.analyses = Object.assign(defaultAnalyses(), M.analyses || {}); M.own = Object.assign({ structure: false, outcomes: false, analyses: false }, M.own || {}); }
+  else modelFromRows();
+  if (M.own.structure || M.own.outcomes) { refreshAutoNames(); syncParams(); }
+}
 
-// ---- Draft (per browser, optional) -------------------------------------------------
-
+// ---- Draft (per browser)
 function snapshot() {
-  return blocks.map(function (b) {
-    return { v: b.value, o: b.opts && b.opts.map(function (o) { return [o.checked, o.vals]; }), r: b.rows };
-  });
+  return { blocks: blocks.map(function (b) { return { v: b.value, o: b.opts && b.opts.map(function (o) { return [o.checked, o.vals]; }), r: b.rows }; }), M: M, step: UI.step };
 }
 function restore(snap) {
-  if (!snap || snap.length !== blocks.length) return false;
-  snap.forEach(function (s, i) {
+  if (!snap || !snap.blocks || snap.blocks.length !== blocks.length) return false;
+  snap.blocks.forEach(function (s, i) {
     var b = blocks[i];
     if (s.v !== undefined && "value" in b) b.value = s.v;
     if (s.o && b.opts && s.o.length === b.opts.length) s.o.forEach(function (x, k) { b.opts[k].checked = x[0]; b.opts[k].vals = x[1] || []; });
     if (s.r && b.kind === "grid") b.rows = s.r;
   });
+  if (snap.M) { M = Object.assign(emptyModel(), snap.M); M.analyses = Object.assign(defaultAnalyses(), M.analyses); }
+  UI.step = snap.step || 0;
   return true;
 }
 var saveTimer = null;
@@ -774,41 +1844,90 @@ function saveDraft() {
   saveTimer = setTimeout(function () { try { localStorage.setItem(DRAFT_KEY, JSON.stringify(snapshot())); } catch (e) {} }, 300);
 }
 function startFresh() {
-  try { localStorage.removeItem(DRAFT_KEY); } catch (e) {}
-  blocks = parseTemplate(TEMPLATE); render(); document.getElementById("notices").innerHTML = "";
+  try { localStorage.removeItem(DRAFT_KEY); localStorage.removeItem("heor-spec-form-draft-v1"); } catch (e) {}
+  blocks = parseTemplate(TEMPLATE); M = emptyModel(); UI = { step: 0, sel: null, connect: null, drag: null, view: "markov" };
+  document.getElementById("notices").innerHTML = ""; render(); window.scrollTo(0, 0);
 }
 
-// ---- Self-test (open with ?selftest) ---------------------------------------------
+// =========================================================================
+// Self-test (open with ?selftest)
+// =========================================================================
 
 function selfTest() {
-  var results = [];
+  var results = [], saved = { blocks: blocks, M: M };
   function check(name, ok) { results.push({ name: name, pass: !!ok }); }
   var norm = function (s) { return s.replace(/\r\n/g, "\n").replace(/\s+$/, "") + "\n"; };
-  var b0 = parseTemplate(TEMPLATE);
-  check("Blank form exports the template unchanged", norm(exportSpec(b0)) === norm(TEMPLATE));
-  var b1 = parseTemplate(TEMPLATE);
-  var rows = b1.filter(function (b) { return b.kind === "row"; });
-  var txt = rows.filter(function (b) { return b.slot === "text"; });
-  var opt = rows.filter(function (b) { return b.slot === "options"; });
-  txt.forEach(function (b, i) { b.value = "Value " + i + (i === 0 ? " with | pipe" : ""); });
-  opt.forEach(function (b) { b.opts[b.opts.length - 1].checked = true; b.opts[b.opts.length - 1].vals = ["filled"]; });
-  b1.filter(function (b) { return b.kind === "lineopts"; }).forEach(function (b) { b.opts[0].checked = true; });
-  b1.filter(function (b) { return b.kind === "lineblank"; }).forEach(function (b) { b.value = "greyscale"; });
-  var g = b1.filter(function (b) { return b.kind === "grid"; })[0];
-  if (g) g.rows = [{ name: "p_ws", description: "Annual probability, Well to Sick", base: "0.1", low: "0.08", high: "0.12", distribution: "beta", input_type: "probability (1 yr)", source: "Smith 2024", notes: "" }];
-  var notes = b1.filter(function (b) { return b.kind === "notes"; })[0];
-  if (notes) notes.value = "Reuse the survival curves in inputs/raw.";
-  var out1 = exportSpec(b1);
-  var b2 = parseTemplate(TEMPLATE); loadSpec(out1, b2);
-  var out2 = exportSpec(b2);
-  check("Filled spec survives export, load and export again", out1 === out2);
-  check("Ticked options export as [x]", (out1.match(/\[x\]/g) || []).length >= opt.length);
-  check("Blanks in options are filled", out1.indexOf("filled") > -1);
-  check("Pipes in answers are escaped", out1.indexOf("with \\| pipe") > -1);
-  check("Parameter row replaces the example row", out1.indexOf("| p_ws |") > -1 && out1.indexOf("p_example") === -1);
-  check("Notes are kept", out1.indexOf("Reuse the survival curves") > -1);
-  check("parameters.csv header matches the scaffold", exportCsv(b1).split("\n")[0] === PARAM_COLS.join(","));
-  check("Every required field is recognised", rows.filter(function (b) { return b.required; }).length > 10);
+  try {
+    blocks = parseTemplate(TEMPLATE); M = emptyModel();
+    check("Blank form exports the template unchanged", norm(exportSpec(blocks, M)) === norm(TEMPLATE));
+    // Generic fields round trip
+    var rows = blocks.filter(function (b) { return b.kind === "row"; });
+    rows.filter(function (b) { return b.slot === "text"; }).forEach(function (b, i) { b.value = "Value " + i + (i === 0 ? " with | pipe" : ""); });
+    rows.filter(function (b) { return b.slot === "options"; }).forEach(function (b) { b.opts[b.opts.length - 1].checked = true; b.opts[b.opts.length - 1].vals = ["filled"]; });
+    blocks.filter(function (b) { return b.kind === "lineopts"; }).forEach(function (b) { b.opts[0].checked = true; });
+    blocks.filter(function (b) { return b.kind === "lineblank"; }).forEach(function (b) { b.value = "greyscale"; });
+    gridBlock().rows = [{ name: "p_ws", description: "Annual probability, Well to Sick", base: "0.1", low: "0.08", high: "0.12", distribution: "beta", input_type: "probability (1 yr)", source: "Smith 2024", notes: "" }];
+    blocks.filter(function (b) { return b.kind === "notes"; })[0].value = "Reuse the survival curves in inputs/raw.";
+    var out1 = exportSpec(blocks, null), b2 = parseTemplate(TEMPLATE); loadSpec(out1, b2);
+    check("Filled spec survives export, load and export again", out1 === exportSpec(b2, null));
+    check("Ticked options export as [x]", (out1.match(/\[x\]/g) || []).length >= rows.filter(function (b) { return b.slot === "options"; }).length);
+    check("Pipes in answers are escaped", out1.indexOf("with \\| pipe") > -1);
+    check("Parameter row replaces the example row", out1.indexOf("| p_ws |") > -1 && out1.indexOf("p_example") === -1);
+    check("Notes are kept", out1.indexOf("Reuse the survival curves") > -1);
+    check("parameters.csv header matches the scaffold", exportCsv(blocks).split("\n")[0] === PARAM_COLS.join(","));
+    check("Every required field is recognised", requiredBlocks().length > 10);
+
+    // Markov drawing -> spec rows and parameters
+    blocks = parseTemplate(TEMPLATE); M = emptyModel();
+    rowBlock(/::intervention/).value = "Treatment X: preventive"; rowBlock(/::comparator/).value = "Standard care";
+    rowBlock(/::cycle length/).opts.forEach(function (o) { o.checked = o.label === "1 year"; });
+    M.type = "markov"; ensureStrategies(); template("3state"); M.own.structure = true; M.own.outcomes = true;
+    var ws = M.edges[0], tx = nonRef()[0];
+    ws.effects[tx.id] = { type: "HR", param: "", auto: true };
+    M.edges[1].kind = "lifetable";
+    var well = M.states[0]; well.costs.push({ id: uid("c"), name: "", category: "Health-state management", strategy: "all", param: "", auto: true });
+    well.costs.push({ id: uid("c"), name: "Drug", category: "Drug acquisition", strategy: tx.id, param: "", auto: true });
+    M.edges[0].dis = { param: "", auto: true, duration: "1 cycle" };
+    syncSpec();
+    var md = exportSpec(blocks, M);
+    check("Strategies come from section 2", M.strategies.map(function (s) { return s.name; }).join("|") === "Standard care|Treatment X");
+    check("Health states written from the drawing", /\| \*\*\[R\]\*\* Health states[^|]*\| Well; Sick; Dead \(absorbing\) \|/.test(md));
+    check("Transitions written with parameters and effects", md.indexOf("Well → Sick (p_well_sick; HR hr_well_sick for Treatment X)") > -1 && md.indexOf("Well → Dead (life table)") > -1);
+    check("Model type ticked", /\[x\] Markov cohort/.test(md));
+    check("Input forms ticked from the drawing", /\[x\] Per-cycle probabilities/.test(md) && /\[x\] Hazard ratios/.test(md));
+    var names = gridBlock().rows.map(function (r) { return r.name; });
+    check("Parameters created from the drawing", ["p_well_sick", "hr_well_sick", "p_sick_dead", "c_well", "c_treatment_x_well_drug", "u_well", "u_sick", "du_well_sick"].every(function (n) { return names.indexOf(n) > -1; }) && names.indexOf("p_well_dead") === -1);
+    check("Per-cycle probability uses the cycle length", gridBlock().rows.filter(function (r) { return r.name === "p_well_sick"; })[0].input_type === "probability (1 yr)");
+    check("Cost rows written to section 6", /Per cycle: c_well \(Well\), c_treatment_x_well_drug \(Well, Treatment X only\)/.test(md));
+    gridBlock().rows.filter(function (r) { return r.name === "p_well_sick"; })[0].base = "0.1";
+    well.name = "Healthy"; syncSpec();
+    var r2 = gridBlock().rows.filter(function (r) { return r.description.indexOf("Healthy → Sick") > -1 && r.input_type !== "HR" && r.input_type !== "disutility"; })[0];
+    check("Renaming a state renames its parameters and keeps their values", r2 && r2.name === "p_healthy_sick" && r2.base === "0.1");
+    // Reload restores the drawing
+    md = exportSpec(blocks, M);
+    var keepM = M; loadAll(md);
+    check("Drawing is restored when the spec is opened", M.states.length === 3 && M.edges.length === 3 && M.states[0].name === "Healthy");
+    check("Reopened spec exports identically", exportSpec(blocks, M) === md);
+    M = keepM;
+
+    // Decision tree
+    blocks = parseTemplate(TEMPLATE); M = emptyModel(); M.type = "tree"; ensureStrategies(); ensureTree(); M.own.structure = true; M.own.outcomes = true;
+    M.tree.branches[0].label = "Infection"; M.tree.branches[0].node.label = "Infection";
+    M.tree.branches[0].node.costs.push({ id: uid("c"), name: "", category: "Hospitalisation", strategy: "all", param: "", auto: true });
+    syncSpec();
+    var tmd = exportSpec(blocks, M), tn = gridBlock().rows.map(function (r) { return r.name; });
+    check("Tree branches become parameters", tn.indexOf("p_infection") > -1 && tn.indexOf("q_infection") > -1 && tn.indexOf("c_infection") > -1);
+    check("Tree written to the spec", /\[x\] Decision tree \[ \]/.test(tmd) && tmd.indexOf("Event: Infection (p_infection), No event (remainder)") > -1);
+
+    // Analyses
+    blocks = parseTemplate(TEMPLATE); M = emptyModel(); M.own.analyses = true;
+    rowBlock(/::willingness to pay/).value = "£25,000 and £35,000";
+    M.analyses.scen.on = true; M.analyses.scen.rows = [{ name: "Discount 1.5%", change: "1.5% a year" }];
+    M.analyses.threshold = { on: true, param: "c_drug", target: "ICER = £25,000" };
+    syncSpec(); var amd = exportSpec(blocks, M);
+    check("Analyses written to section 7", /\[x\] Both/.test(amd) && /\[x\] NMB at £25,000/.test(amd) === false && /5,000; seed 2026/.test(amd) && amd.indexOf("Discount 1.5%: 1.5% a year") > -1 && amd.indexOf("c_drug; target: ICER = £25,000") > -1);
+  } catch (err) { check("No errors (" + err.message + ")", false); }
+  blocks = saved.blocks; M = saved.M;
   var pass = results.every(function (r) { return r.pass; });
   window.__selftest = { pass: pass, results: results };
   var box = document.createElement("div"); box.id = "selftest";
@@ -818,16 +1937,11 @@ function selfTest() {
   document.title = "SELFTEST " + (pass ? "PASS" : "FAIL");
 }
 
-// ---- Start ---------------------------------------------------------------------
-
-renderIntro();
+// ---- Start
 var restored = false;
 try { restored = restore(JSON.parse(localStorage.getItem(DRAFT_KEY) || "null")); } catch (e) {}
 render();
-if (restored) {
-  notice('Restored your unsaved draft from this browser. <button class="small" id="fresh">Start a blank spec</button>', "info", true);
-  document.getElementById("fresh").onclick = startFresh;
-}
+if (restored) notice('Restored your unsaved draft from this browser. Use <b>Clear form</b> to start a blank spec.', "info", true);
 if (/selftest/.test(location.search)) selfTest();
 </script>
 </body>

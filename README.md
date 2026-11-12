@@ -27,7 +27,14 @@ The skill has three aims:
    ```
 
    Claude puts a blank `model_spec.md` and the spec form `model_spec_form.html` in the folder. If you already have a filled-in spec, save it in the folder and go to step 5.
-4. **Fill in the spec.** Double-click `model_spec_form.html` to open it in your browser. Fill in every field marked **Required**, add your parameters (you can paste them from Excel), then click **Export model_spec.md**, and **Export parameters.csv** if you entered parameters. Save both into the model folder. The form works offline, saves a draft as you go, and can open an existing `model_spec.md` to edit it. For UK models, give the age at entry and the % female, because the ONS life tables need them. Leave background mortality blank to use the bundled ONS tables. You can also edit `model_spec.md` directly instead.
+4. **Build the spec.** Double-click `model_spec_form.html` to open it in your browser, and work through the numbered steps. Use **Next** and **Back**, or click any step; nothing is locked.
+   - **Section 4:** pick the model type and draw it. For a Markov or partitioned survival model, add states, connect them, and click an arrow to set its probability, rate, survival curve or life-table death, plus any treatment effect (HR/OR/RR). For a decision tree, add chance nodes, branches and outcomes.
+   - **Section 5:** the parameter table fills itself from the drawing. Add the values, ranges and sources, or paste them from Excel.
+   - **Section 6:** click states and arrows to attach costs and utilities.
+   - **Section 7:** switch the analyses on as cards.
+   - **Review and export:** export `model_spec.md` and `parameters.csv` into the model folder.
+
+   The form works offline and saves a draft as you go; **Clear form** starts again. It can also open an existing `model_spec.md`, including its drawing, to edit it. For UK models, give the age at entry and the % female, because the ONS life tables need them. Leave background mortality blank to use the bundled ONS tables. You can also edit `model_spec.md` directly instead.
 5. **Tell Claude the spec is ready.** Type `spec is done`. Put any data files (for example a parameters spreadsheet) in the folder first, and name them in your message.
 6. **Answer the Stage 0 message once.** Claude lists all the gaps and proposed defaults in one message. Reply to all of them in one message, for example "accept all defaults, but use a threshold of £30,000".
 7. **Review and sign off each checkpoint.** Use the matching section of `log/review_checklist.md`. Then reply `signed off, continue`.
@@ -141,8 +148,8 @@ Rscript tests/test_outputs.R
 
 ## Status
 
-- Version 0.3: adds the browser spec form (model_spec_form.html) and the self-contained HTML report (build_report()). Version 0.2 added ONS life tables for background mortality.
-- Tested: the R helpers (51 known-answer checks, including background mortality against ONS life expectancy and the form/template match), the figure, table and report output, and the spec form round trip (its self-test, and loading a filled spec written for an older template).
+- Version 0.4: the spec form is now a step-by-step model builder: draw the model, attach costs and outcomes, set up the analyses as cards; Clear form button. Template section 7 gains threshold analysis and EVPPI rows. Version 0.3 added the spec form and the HTML report; 0.2 added ONS life tables.
+- Tested: the R helpers (51 known-answer checks, including background mortality against ONS life expectancy and the form/template match), the figure, table and report output, and the spec builder (22 self-test checks: template round trip, drawing to rows and parameters, reopening a spec restores the drawing, decision tree, analyses; plus clicking, dragging and connecting in a browser).
 - A demo model (the 3-state toy model) has been built by Claude through Stage 3, with an HTML report.
 - Not tested yet: the scaffold script's steps that copy the life table and the spec form (written without Python available), and a full model built from a real spec. Do both before you use the skill for a submission.
 

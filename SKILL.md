@@ -21,6 +21,16 @@ Automatic tests find code errors; they cannot tell whether the model is right. S
 
 1. Look for `model_spec.md` in the project folder or among the user's files.
 2. If there is none, copy `assets/model_spec_template.md` into the project as `model_spec.md`, and copy `assets/model_spec_form.html` into the project root. Ask the user to fill in the spec. The easiest way is to open `model_spec_form.html` in a browser, fill it in, and export `model_spec.md` (and `parameters.csv` if they used the parameter table) into the project folder. The form works offline and can also open an existing `model_spec.md` to edit it. Editing `model_spec.md` directly also works. If they would rather answer in chat, ask for the **required** fields only, all in one message. If the form exported a `parameters.csv`, move it to `inputs/parameters.csv` and use it as the starting point for Stage 1.
+
+   **Specs exported from the form** end with one comment line, `<!-- heor-form-data {...} -->`. It holds the model the user drew, as JSON:
+   - `type`;
+   - `strategies` and the reference strategy `ref`;
+   - `states`, with `absorbing`, `start`, per-cycle `costs` and `utility`;
+   - `edges`, with `from`, `to`, `kind` (`prob`, `probT`, `rate`, `survival`, `lifetable`, `complement`), `param`, treatment `effects` per strategy, one-off `costs`, and a disutility `dis`;
+   - or a decision `tree` of chance and terminal nodes, where branch `kind` is `prob` or `complement` (remainder) and terminals `link` to Markov states;
+   - plus `startCosts` and the `analyses` plan.
+
+   The table rows above it are written from the same drawing and stay the spec of record. Use the JSON to build `02_model_structure.R`: one state per state, one transition per edge, with the parameter names as given. In the R code, `complement` means 1 minus the other exits, `lifetable` means background mortality, and an effect applies to the edge for that strategy. Keep the user's layout in mind for `fig_model_structure`. Do not edit the comment by hand; if the design changes, change the rows and the code, and log it.
 3. Validate the spec against `references/methods_checklist.md` (section "Spec validation"). Then send **one** message that lists:
    - missing required fields,
    - internal inconsistencies (e.g. lifetime horizon with a 1-year cycle and no age-dependent mortality; probabilities given where rates are needed),
@@ -81,7 +91,7 @@ Automatic tests find code errors; they cannot tell whether the model is right. S
 - `references/output_standards.md` — figure and table house style. Read before producing any output.
 - `references/folder_structure.md` — the scaffold and what goes where.
 - `assets/model_spec_template.md` — the fill-out spec.
-- `assets/model_spec_form.html` — a browser form for the spec, built from an embedded copy of the template. It exports `model_spec.md` and `parameters.csv`. After changing the template, run `Rscript scripts/build_spec_form.R` to re-embed it; `tests/test_toolkit.R` fails if they differ. Open the form with `?selftest` added to its address to run its round-trip self-test.
+- `assets/model_spec_form.html` — a step-by-step browser builder for the spec, built from an embedded copy of the template. The user picks the model type and draws it in section 4 (states and transitions, or a decision tree), attaches costs and utilities to the drawing in section 6, and sets up the analyses as cards in section 7. The drawing fills in the health states, transitions and parameter table. It exports `model_spec.md` and `parameters.csv`. After changing the template, run `Rscript scripts/build_spec_form.R` to re-embed it; `tests/test_toolkit.R` fails if they differ. Open the form with `?selftest` added to its address to run its round-trip self-test.
 - `references/review_checklist.md` — the human checks for each checkpoint: face validity, rationality checks and known-answer tests. Copied into each project's `log/` folder.
 - `assets/utils_conversions.R`, `assets/utils_outputs.R`, `assets/utils_tests.R` — copied into each project's `R/` folder by the scaffold script.
 - `assets/ons_life_tables_uk.csv` and `assets/ons_life_tables_uk_source.md` — ONS UK life tables by single year of age and sex, with their release details. Copied into each project's `inputs/raw/` folder by the scaffold script. `scripts/prepare_ons.R` rebuilds them from a new ONS workbook.

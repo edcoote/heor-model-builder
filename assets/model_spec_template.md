@@ -86,6 +86,8 @@ Fill one row per parameter, or attach a CSV with these columns. This becomes `in
 | [O] PSA iterations (default 5,000) and seed (default 2026) | |
 | [O] Parameters for DSA (default: all with low/high) | |
 | [O] Scenario analyses (list each, one line each) | |
+| [O] Threshold analysis (parameter to vary; target, e.g. ICER = £25,000) | |
+| [O] EVPPI parameter groups (one group per line) | |
 | [O] Structural uncertainty to test | |
 
 ## 8. Optional modules
